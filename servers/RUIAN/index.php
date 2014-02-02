@@ -56,6 +56,7 @@ if (pg_num_rows($result) > 0)
            "okres" => $row["okres"],
            "kraj" => $row["kraj"],
            "psc" => $row["psc"],
+           "pocet_podlazi" => $row["pocet_podlazi"],
            "zpusob_vyuziti" => $row["nazev"],
            "plati_od" => $row["plati_od"]);
 } else
