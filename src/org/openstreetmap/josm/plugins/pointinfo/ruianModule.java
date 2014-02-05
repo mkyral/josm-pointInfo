@@ -24,39 +24,93 @@ import org.openstreetmap.josm.data.coor.LatLon;
 import org.json.JSONObject;
 import org.json.JSONArray;
 
-import java.util.Locale;
+import java.util.*;
+
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 
+class addrPlaces {
+    private long    m_ruian_id;
+    private String  m_cislo_domovni;
+    private String  m_cislo_orientacni;
+    private String  m_ulice;
+
+    public addrPlaces () {
+      init();
+    }
+
+    private void init () {
+      m_ruian_id = 0;
+      m_cislo_domovni = "";
+      m_cislo_orientacni = "";
+      m_ulice = "";
+    }
+
+    public void setRuianID (long v) {
+      m_ruian_id = v;
+    }
+
+    public void setCisloDomovni (String v) {
+      m_cislo_domovni = v;
+    }
+
+    public void setCisloOrientacni (String v) {
+      m_cislo_orientacni = v;
+    }
+
+    public void setUlice (String v) {
+      m_ulice = v;
+    }
+
+    public long getRuianID () {
+      return m_ruian_id;
+    }
+
+    public String getCisloDomovni () {
+      return m_cislo_domovni;
+    }
+
+    public String getCisloOrientacni () {
+      return m_cislo_orientacni;
+    }
+
+    public String getUlice () {
+      return m_ulice;
+    }
+
+}
+
 class ruianRecord {
 
-    private double m_coor_lat, m_coor_lon;
-    private String m_source;
-    private long   m_objekt_ruian_id;
-    private String m_objekt_cislo_domovni;
-    private String m_objekt_cislo_domovni_typ;
-    private String m_objekt_cislo_orientacni;
-    private int    m_objekt_podlazi;
-    private int    m_objekt_byty;
-    private String m_objekt_zpusob_vyuziti;
-    private String m_objekt_dokonceni;
-    private String m_objekt_plati_od;
-    private String m_objekt_ulice;
-    private String m_objekt_cast_obce;
-    private String m_objekt_obec;
-    private String m_objekt_okres;
-    private String m_objekt_kraj;
-    private String m_objekt_psc;
-    private long   m_parcela_ruian_id;
-    private String m_parcela_druh_pozemku;
-    private String m_parcela_zpusob_vyuziti;
-    private String m_parcela_plati_od;
-    private String m_parcela_katastralni_uzemi;
-    private String m_parcela_obec;
-    private String m_parcela_okres;
-    private String m_parcela_kraj;
-    private long   m_ulice_ruian_id;
-    private String m_ulice_jmeno;
+    private double   m_coor_lat, m_coor_lon;
+    private String   m_source;
+    private long     m_objekt_ruian_id;
+    private String   m_objekt_cislo_domovni;
+    private String   m_objekt_cislo_domovni_typ;
+    private String   m_objekt_cislo_orientacni;
+    private int      m_objekt_podlazi;
+    private int      m_objekt_byty;
+    private String   m_objekt_zpusob_vyuziti;
+    private String   m_objekt_dokonceni;
+    private String   m_objekt_plati_od;
+    private String   m_objekt_ulice;
+    private String   m_objekt_cast_obce;
+    private String   m_objekt_obec;
+    private String   m_objekt_okres;
+    private String   m_objekt_kraj;
+    private String   m_objekt_psc;
+    private long     m_parcela_ruian_id;
+    private String   m_parcela_druh_pozemku;
+    private String   m_parcela_zpusob_vyuziti;
+    private String   m_parcela_plati_od;
+    private String   m_parcela_katastralni_uzemi;
+    private String   m_parcela_obec;
+    private String   m_parcela_okres;
+    private String   m_parcela_kraj;
+    private long     m_ulice_ruian_id;
+    private String   m_ulice_jmeno;
+
+    private ArrayList <addrPlaces> m_adresni_mista;
 
 
     public ruianRecord () {
@@ -83,6 +137,7 @@ class ruianRecord {
       m_objekt_okres = "";
       m_objekt_kraj = "";
       m_objekt_psc = "";
+      m_adresni_mista = new ArrayList<addrPlaces> ();
       m_parcela_ruian_id = 0;
       m_parcela_druh_pozemku = "";
       m_parcela_zpusob_vyuziti = "";
@@ -120,7 +175,7 @@ class ruianRecord {
       } catch (Exception e) {
       }
 
-
+// =========================================================================
       try {
         JSONObject stavebniObjekt = obj.getJSONObject("stavebni_objekt");
 
@@ -174,7 +229,6 @@ class ruianRecord {
         } catch (Exception e) {
         }
 
-
         try {
           m_objekt_podlazi = stavebniObjekt.getInt("pocet_podlazi");
         } catch (Exception e) {
@@ -202,6 +256,41 @@ class ruianRecord {
       } catch (Exception e) {
       }
 
+// =========================================================================
+      try {
+        JSONArray arr = obj.getJSONArray("adresni_mista");
+
+        for(int i = 0; i < arr.length(); i++)
+        {
+          JSONObject adresniMisto = arr.getJSONObject(i);
+          addrPlaces am = new addrPlaces();
+
+          try {
+            am.setRuianID(adresniMisto.getLong("ruian_id"));
+          } catch (Exception e) {
+          }
+
+          try {
+            am.setCisloDomovni(adresniMisto.getString("cislo_domovni"));
+          } catch (Exception e) {
+          }
+
+          try {
+            am.setCisloOrientacni(adresniMisto.getString("cislo_orientacni"));
+          } catch (Exception e) {
+          }
+
+          try {
+            am.setUlice(adresniMisto.getString("ulice"));
+          } catch (Exception e) {
+          }
+
+          m_adresni_mista.add(am);
+        }
+      } catch (Exception e) {
+      }
+
+// =========================================================================
       try {
         JSONObject parcela = obj.getJSONObject("parcela");
 
@@ -248,6 +337,7 @@ class ruianRecord {
       } catch (Exception e) {
       }
 
+// =========================================================================
       try {
         JSONObject ulice = obj.getJSONObject("ulice");
 
@@ -300,7 +390,13 @@ class ruianRecord {
         r += "<b>Datum dokončení: </b>" + m_objekt_dokonceni + "<br/>";
         r += "<b>Platí od: </b>" + m_objekt_plati_od + "<br/>";
         r += "<br/>";
-        if (m_objekt_cislo_domovni == null || m_objekt_cislo_domovni.isEmpty()) {
+        if (m_adresni_mista.size() > 0) {
+          r += "<b>" + m_objekt_cislo_domovni_typ + ": </b>" + m_objekt_cislo_domovni + " (více vchodů)<br/>";
+          r += "<b>Část obce: </b>" + m_objekt_cast_obce + "<br/>";
+          r += "<b>Obec: </b>" + m_parcela_obec +"<br/>";
+          r += "<b>Okres: </b>" + m_parcela_okres +"<br/>";
+          r += "<b>Kraj: </b>" + m_parcela_kraj +"<br/>";
+        } else if (m_objekt_cislo_domovni == null || m_objekt_cislo_domovni.isEmpty()) {
           r += "<b>Budova: </b>" + m_objekt_cislo_domovni_typ + "<br/>";
           r += "<b>Obec: </b>" + m_parcela_obec +"<br/>";
           r += "<b>Okres: </b>" + m_parcela_okres +"<br/>";
@@ -317,6 +413,20 @@ class ruianRecord {
           r += "<b>Okres: </b>" + m_objekt_okres + "<br/>";
           r += "<b>Kraj: </b>" + m_objekt_kraj + "<br/>";
           r += "<b>PSČ: </b>" + m_objekt_psc + "<br/>";
+        }
+        r += "<br/>";
+      }
+      if (m_adresni_mista.size() > 0) {
+        System.out.println("am.size() = " + m_adresni_mista.size());
+        r += "<i><u>Adresní místa</u></i><br/>";
+        for (int i=0; i<m_adresni_mista.size(); i++) {
+          r += "<a href=http://vdp.cuzk.cz/vdp/ruian/adresnimista/" + m_adresni_mista.get(i).getRuianID() + ">";
+          r += m_adresni_mista.get(i).getRuianID() + "</a> ";
+          r += m_adresni_mista.get(i).getUlice() + " " + m_adresni_mista.get(i).getCisloDomovni();
+          if (!m_adresni_mista.get(i).getCisloOrientacni().isEmpty()) {
+            r += "/" + m_adresni_mista.get(i).getCisloOrientacni();
+          }
+          r += "<br/>";
         }
         r += "<br/>";
       }

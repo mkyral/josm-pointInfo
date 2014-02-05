@@ -5,7 +5,6 @@ $lon=$_REQUEST['lon'];
 if ( !is_numeric($lat) or !is_numeric($lon) ) die;
 header('Content-Type: application/json');
 
-
 $data = array();
 
 $data["coordinates"] = array( "lat" => "$lat", "lon" => "$lon");
@@ -63,6 +62,50 @@ if (pg_num_rows($result) > 0)
            "plati_od" => $row["plati_od"]);
 } else
     $data["stavebni_objekt"] = array();
+
+// Addresses
+if (count($data) > 0)
+{
+  $query="
+    select am.kod,
+          am.cislo_domovni,
+          am.cislo_orientacni_hodnota || coalesce(am.cislo_orientacni_pismeno, '') cislo_orientacni,
+          ul.nazev ulice
+    from rn_adresni_misto am
+        left outer join rn_ulice ul on am.ulice_kod = ul.kod
+    where am.stavobj_kod = ".$data["stavebni_objekt"]["ruian_id"]."
+    and not am.deleted
+    order by st_distance( (st_transform(am.definicni_bod,4326))::geography,
+                          (st_setsrid(st_makepoint(".$lon.",".$lat."),4326))::geography)
+  ;
+  ";
+
+  $result=pg_query($CONNECT,$query);
+  $error= pg_last_error($CONNECT);
+  if (pg_num_rows($result) > 1)
+  {
+    $am = array();
+    for ($i = 0; $i < pg_num_rows($result); $i++)
+    {
+      $row = pg_fetch_array($result, $i);
+      array_push($am,
+                  array("ruian_id" => $row["kod"],
+                        "cislo_domovni" => $row["cislo_domovni"],
+                        "cislo_orientacni" => $row["cislo_orientacni"],
+                        "ulice" => $row["ulice"]));
+    }
+      $data["adresni_mista"] = $am;
+  } else
+  {
+  //   echo "error: $error\n";
+    $data["adresni_mista"] = array();
+  }
+}
+else
+{
+//   echo "error: $error\n";
+  $data["adresni_mista"] = array();
+}
 
 // land
 $query="
