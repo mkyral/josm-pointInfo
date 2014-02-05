@@ -37,7 +37,9 @@ class ruianRecord {
     private String m_objekt_cislo_domovni_typ;
     private String m_objekt_cislo_orientacni;
     private int    m_objekt_podlazi;
+    private int    m_objekt_byty;
     private String m_objekt_zpusob_vyuziti;
+    private String m_objekt_dokonceni;
     private String m_objekt_plati_od;
     private String m_objekt_ulice;
     private String m_objekt_cast_obce;
@@ -53,6 +55,9 @@ class ruianRecord {
     private String m_parcela_obec;
     private String m_parcela_okres;
     private String m_parcela_kraj;
+    private long   m_ulice_ruian_id;
+    private String m_ulice_jmeno;
+
 
     public ruianRecord () {
       init();
@@ -68,7 +73,9 @@ class ruianRecord {
       m_objekt_cislo_domovni_typ = "";
       m_objekt_cislo_orientacni = "";
       m_objekt_podlazi = 0;
+      m_objekt_byty = 0;
       m_objekt_zpusob_vyuziti = "";
+      m_objekt_dokonceni = "";
       m_objekt_plati_od = "";
       m_objekt_ulice = "";
       m_objekt_cast_obce = "";
@@ -84,6 +91,8 @@ class ruianRecord {
       m_parcela_obec = "";
       m_parcela_okres = "";
       m_parcela_kraj = "";
+      m_ulice_ruian_id = 0;
+      m_ulice_jmeno = "";
 
     }
 
@@ -172,12 +181,22 @@ class ruianRecord {
         }
 
         try {
+          m_objekt_byty = stavebniObjekt.getInt("pocet_bytu");
+        } catch (Exception e) {
+        }
+
+        try {
           m_objekt_zpusob_vyuziti = stavebniObjekt.getString("zpusob_vyuziti");
         } catch (Exception e) {
         }
 
         try {
           m_objekt_plati_od = stavebniObjekt.getString("plati_od");
+        } catch (Exception e) {
+        }
+
+        try {
+          m_objekt_dokonceni = stavebniObjekt.getString("dokonceni");
         } catch (Exception e) {
         }
       } catch (Exception e) {
@@ -229,6 +248,22 @@ class ruianRecord {
       } catch (Exception e) {
       }
 
+      try {
+        JSONObject ulice = obj.getJSONObject("ulice");
+
+        try {
+          m_ulice_ruian_id = ulice.getLong("ruian_id");
+        } catch (Exception e) {
+        }
+
+        try {
+          m_ulice_jmeno = ulice.getString("jmeno");
+        } catch (Exception e) {
+        }
+
+      } catch (Exception e) {
+      }
+
     } catch (Exception e) {
     }
 
@@ -259,8 +294,10 @@ class ruianRecord {
       if (m_objekt_ruian_id > 0) {
         r += "<i><u>Informace o objektu</u></i><br/>";
         r += "<b>RUIAN id: </b><a href=http://vdp.cuzk.cz/vdp/ruian/stavebniobjekty/" + m_objekt_ruian_id +">" + m_objekt_ruian_id + "</a><br/>";
-        r += "<b>Počet podlaží: </b>" + m_objekt_podlazi + "<br/>";
+        if (m_objekt_podlazi > 0) r += "<b>Počet podlaží: </b>" + m_objekt_podlazi + "<br/>";
+        if (m_objekt_byty > 0) r += "<b>Počet bytů: </b>" + m_objekt_byty + "<br/>";
         r += "<b>Způsob využití: </b>" + m_objekt_zpusob_vyuziti + "<br/>";
+        r += "<b>Datum dokončení: </b>" + m_objekt_dokonceni + "<br/>";
         r += "<b>Platí od: </b>" + m_objekt_plati_od + "<br/>";
         r += "<br/>";
         if (m_objekt_cislo_domovni == null || m_objekt_cislo_domovni.isEmpty()) {
@@ -287,7 +324,7 @@ class ruianRecord {
         r += "<i><u>Informace o pozemku</u></i><br/>";
         r += "<b>RUIAN id: </b><a href=http://vdp.cuzk.cz/vdp/ruian/parcely/" + m_parcela_ruian_id +">" + m_parcela_ruian_id + "</a><br/>";
         r += "<b>Druh pozemku: </b>" + m_parcela_druh_pozemku +"<br/>";
-        r += "<b>Způsob využití: </b>" + m_parcela_zpusob_vyuziti +"<br/>";
+        if (m_parcela_zpusob_vyuziti != "") r += "<b>Způsob využití: </b>" + m_parcela_zpusob_vyuziti +"<br/>";
         r += "<b>Platí od: </b>" + m_parcela_plati_od +"<br/>";
         r += "<br/>";
         r += "<b>Katastrální území: </b>" + m_parcela_katastralni_uzemi +"<br/>";
@@ -295,6 +332,12 @@ class ruianRecord {
           r += "<b>Obec: </b>" + m_parcela_obec +"<br/>";
           r += "<b>Okres: </b>" + m_parcela_okres +"<br/>";
           r += "<b>Kraj: </b>" + m_parcela_kraj +"<br/>";
+        }
+        if ( m_ulice_ruian_id > 0) {
+          r += "<br/>";
+          r += "<i><u>Informace o ulici</u></i><br/>";
+          r += "<b>RUIAN id: </b><a href=http://vdp.cuzk.cz/vdp/ruian/ulice/" + m_ulice_ruian_id +">" + m_ulice_ruian_id + "</a><br/>";
+          r += "<b>Jméno: </b>" + m_ulice_jmeno +"<br/>";
         }
       }
       r += "<hr/>";

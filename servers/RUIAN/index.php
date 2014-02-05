@@ -12,7 +12,7 @@ $data["coordinates"] = array( "lat" => "$lat", "lon" => "$lon");
 $data["source"] = "cuzk:ruian";
 
 
-// budova
+// building
 $query="
   select s.kod,
         CASE
@@ -23,7 +23,7 @@ $query="
         END cislo_typ,
         trim(both '{}' from s.cisla_domovni::text) cisla_domovni,
         b.cislo_orientacni_hodnota || coalesce(b.cislo_orientacni_pismeno, '') cislo_orientacni,
-        s.pocet_podlazi, a.nazev, s.plati_od,
+        s.pocet_podlazi, a.nazev, s.plati_od, s.pocet_bytu, s.dokonceni,
         b.adrp_psc psc, ul.nazev ulice, c.nazev cast_obce,
         ob.nazev obec, ok.nazev okres, vu.nazev kraj
   from rn_stavebni_objekt s
@@ -58,11 +58,13 @@ if (pg_num_rows($result) > 0)
            "psc" => $row["psc"],
            "pocet_podlazi" => $row["pocet_podlazi"],
            "zpusob_vyuziti" => $row["nazev"],
+           "pocet_bytu" => $row["pocet_bytu"],
+           "dokonceni" => $row["dokonceni"],
            "plati_od" => $row["plati_od"]);
 } else
     $data["stavebni_objekt"] = array();
 
-// pozemek
+// land
 $query="
   select s.id, a.nazev as druh_pozemku, b.nazev as zpusob_vyuziti, s.plati_od,
          ku.nazev katastralni_uzemi,
@@ -98,6 +100,35 @@ if (pg_num_rows($result) > 0)
 {
 //   echo "error: $error\n";
   $data["parcela"] = array();
+}
+
+$query="
+  select u.kod, u.nazev as jmeno
+  from ( select kod, nazev, definicni_cara
+        from ruian.rn_ulice
+        order by definicni_cara <->
+                st_transform(st_setsrid(st_makepoint(".$lon.",".$lat."),4326),900913)
+        limit 100) as u
+  where st_distance( (st_transform(u.definicni_cara,4326))::geography, (st_setsrid(st_makepoint(".$lon.",".$lat."),4326))::geography ) < 10
+  order by st_distance( (st_transform(u.definicni_cara,4326))::geography,
+                        (st_setsrid(st_makepoint(".$lon.",".$lat."),4326))::geography)
+  limit 1
+  ;
+";
+
+$result=pg_query($CONNECT,$query);
+$error= pg_last_error($CONNECT);
+if (pg_num_rows($result) > 0)
+{
+  $row = pg_fetch_array($result, 0);
+
+  $data["ulice"] =
+    array( "ruian_id" => $row["kod"],
+          "jmeno" => $row["jmeno"]);
+} else
+{
+//   echo "error: $error\n";
+  $data["ulice"] = array();
 }
 
 echo json_encode($data);

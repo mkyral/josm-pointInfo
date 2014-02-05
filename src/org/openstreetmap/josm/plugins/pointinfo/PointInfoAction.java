@@ -119,6 +119,26 @@ class PointInfoAction extends MapMode implements MouseListener {
 
                 @Override
                 protected void finish() {
+                  // Show result
+                  JEditorPane msgLabel = new JEditorPane("text/html", htmlText);
+                  msgLabel.setEditable(false);
+                  msgLabel.setOpaque(false);
+                  msgLabel.addHyperlinkListener(new HyperlinkListener() {
+                    public void hyperlinkUpdate(HyperlinkEvent hle) {
+                      if (HyperlinkEvent.EventType.ACTIVATED.equals(hle.getEventType())) {
+                        System.out.println(hle.getURL());
+                        try {
+                            openWebpage(hle.getURL().toURI());
+                        } catch (URISyntaxException e) {
+                            e.printStackTrace();
+                        }
+                      }
+                    }
+                  });
+                  Object[] objects = {msgLabel};
+                  final ImageIcon icon = new ImageIcon(getClass().getResource("/images/dialogs/info-sml.png"));
+                  JOptionPane.showMessageDialog(
+                    null, objects, tr("PointInfo") + " " + coordinatesText, JOptionPane.PLAIN_MESSAGE,icon);
                 }
 
                 @Override
@@ -152,27 +172,6 @@ class PointInfoAction extends MapMode implements MouseListener {
           note.show();
           return;
         }
-
-        // Show result
-        JEditorPane msgLabel = new JEditorPane("text/html", htmlText);
-        msgLabel.setEditable(false);
-        msgLabel.setOpaque(false);
-        msgLabel.addHyperlinkListener(new HyperlinkListener() {
-          public void hyperlinkUpdate(HyperlinkEvent hle) {
-            if (HyperlinkEvent.EventType.ACTIVATED.equals(hle.getEventType())) {
-              System.out.println(hle.getURL());
-              try {
-                  openWebpage(hle.getURL().toURI());
-              } catch (URISyntaxException e) {
-                  e.printStackTrace();
-              }
-            }
-          }
-        });
-        Object[] objects = {msgLabel};
-        final ImageIcon icon = new ImageIcon(getClass().getResource("/images/dialogs/info-sml.png"));
-        JOptionPane.showMessageDialog(
-          null, objects, tr("PointInfo") + " " + coordinatesText, JOptionPane.PLAIN_MESSAGE,icon);
     }
 
     public void cancel() {
