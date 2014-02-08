@@ -24,15 +24,16 @@ $query="
         b.cislo_orientacni_hodnota || coalesce(b.cislo_orientacni_pismeno, '') cislo_orientacni,
         s.pocet_podlazi, a.nazev, s.plati_od, s.pocet_bytu, s.dokonceni,
         b.adrp_psc psc, ul.nazev ulice, c.nazev cast_obce,
-        ob.nazev obec, ok.nazev okres, vu.nazev kraj
+        ob.nazev obec, ok.nazev okres, vu.nazev kraj,
+        a.osmtag_k, a.osmtag_v
   from rn_stavebni_objekt s
       left outer join osmtables.zpusob_vyuziti_objektu a on s.zpusob_vyuziti_kod = a.kod
-      left outer join rn_adresni_misto b on b.stavobj_kod = s.kod
-      left outer join rn_ulice ul on b.ulice_kod = ul.kod
-      left outer join rn_cast_obce c on c.kod = s.cobce_kod
-      left outer join rn_obec ob on ul.obec_kod = ob.kod
-      left outer join rn_okres ok on ob.okres_kod = ok.kod
-      left outer join rn_vusc vu on ok.vusc_kod = vu.kod
+      left outer join rn_adresni_misto b on b.stavobj_kod = s.kod and not b.deleted
+      left outer join rn_ulice ul on b.ulice_kod = ul.kod and not ul.deleted
+      left outer join rn_cast_obce c on c.kod = s.cobce_kod and not c.deleted
+      left outer join rn_obec ob on ul.obec_kod = ob.kod and not ob.deleted
+      left outer join rn_okres ok on ob.okres_kod = ok.kod and not ok.deleted
+      left outer join rn_vusc vu on ok.vusc_kod = vu.kod and not vu.deleted
   where st_contains(s.hranice,st_transform(st_geomfromtext('POINT(".$lon." ".$lat.")',4326),900913))
   and not s.deleted
   limit 1;
@@ -57,9 +58,12 @@ if (pg_num_rows($result) > 0)
            "psc" => $row["psc"],
            "pocet_podlazi" => $row["pocet_podlazi"],
            "zpusob_vyuziti" => $row["nazev"],
+           "zpusob_vyuziti_key" => $row["osmtag_k"],
+           "zpusob_vyuziti_val" => $row["osmtag_v"],
            "pocet_bytu" => $row["pocet_bytu"],
            "dokonceni" => $row["dokonceni"],
-           "plati_od" => $row["plati_od"]);
+           "plati_od" => $row["plati_od"]
+           );
 } else
     $data["stavebni_objekt"] = array();
 
@@ -115,10 +119,10 @@ $query="
   from rn_parcela s
       left outer join osmtables.druh_pozemku a on s.druh_pozemku_kod = a.kod
       left outer join osmtables.zpusob_vyuziti_pozemku b on s.zpusob_vyu_poz_kod = b.kod
-      left outer join rn_katastralni_uzemi ku on s.katuz_kod = ku.kod
-      left outer join rn_obec ob on ku.obec_kod = ob.kod
-      left outer join rn_okres ok on ob.okres_kod = ok.kod
-      left outer join rn_vusc vu on ok.vusc_kod = vu.kod
+      left outer join rn_katastralni_uzemi ku on s.katuz_kod = ku.kod and not ku.deleted
+      left outer join rn_obec ob on ku.obec_kod = ob.kod and not ob.deleted
+      left outer join rn_okres ok on ob.okres_kod = ok.kod and not ok.deleted
+      left outer join rn_vusc vu on ok.vusc_kod = vu.kod and not vu.deleted
   where st_contains(s.hranice,st_transform(st_geomfromtext('POINT(".$lon." ".$lat.")',4326),900913))
   and not s.deleted
   limit 1;
@@ -149,6 +153,7 @@ $query="
   select u.kod, u.nazev as jmeno
   from ( select kod, nazev, definicni_cara
         from ruian.rn_ulice
+        where not deleted
         order by definicni_cara <->
                 st_transform(st_setsrid(st_makepoint(".$lon.",".$lat."),4326),900913)
         limit 100) as u
