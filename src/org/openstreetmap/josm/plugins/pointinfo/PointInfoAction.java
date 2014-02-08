@@ -34,6 +34,7 @@ import java.util.LinkedList;
 import javax.swing.SwingConstants;
 import javax.swing.JEditorPane;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
 import javax.swing.ImageIcon;
 import javax.swing.event.HyperlinkEvent;
 import javax.swing.event.HyperlinkListener;
@@ -119,26 +120,37 @@ class PointInfoAction extends MapMode implements MouseListener {
 
                 @Override
                 protected void finish() {
-                  // Show result
-                  JEditorPane msgLabel = new JEditorPane("text/html", htmlText);
-                  msgLabel.setEditable(false);
-                  msgLabel.setOpaque(false);
-                  msgLabel.addHyperlinkListener(new HyperlinkListener() {
-                    public void hyperlinkUpdate(HyperlinkEvent hle) {
-                      if (HyperlinkEvent.EventType.ACTIVATED.equals(hle.getEventType())) {
-                        System.out.println(hle.getURL());
-                        try {
-                            openWebpage(hle.getURL().toURI());
-                        } catch (URISyntaxException e) {
-                            e.printStackTrace();
+                  if (htmlText.length() > 0) {
+
+                    // Show result
+                    JEditorPane msgLabel = new JEditorPane("text/html", htmlText);
+                    msgLabel.setEditable(false);
+                    msgLabel.setOpaque(false);
+                    msgLabel.addHyperlinkListener(new HyperlinkListener() {
+                      public void hyperlinkUpdate(HyperlinkEvent hle) {
+                        if (HyperlinkEvent.EventType.ACTIVATED.equals(hle.getEventType())) {
+                          if (hle.getURL() == null || hle.getURL().toString().isEmpty()) {
+                            return;
+                            }
+                          System.out.println("URL: "+ hle.getURL());
+                          if (! hle.getURL().toString().startsWith("http")) {
+                            mRuian.performAction(hle.getURL().toString());
+                          } else {
+                            try {
+                                openWebpage(hle.getURL().toURI());
+                            } catch (URISyntaxException e) {
+                                e.printStackTrace();
+                            }
+                          }
                         }
                       }
-                    }
-                  });
-                  Object[] objects = {msgLabel};
-                  final ImageIcon icon = new ImageIcon(getClass().getResource("/images/dialogs/info-sml.png"));
-                  JOptionPane.showMessageDialog(
-                    null, objects, tr("PointInfo") + " " + coordinatesText, JOptionPane.PLAIN_MESSAGE,icon);
+                    });
+                    JScrollPane scrollPane = new JScrollPane(msgLabel);
+                    Object[] objects = {scrollPane};
+                    final ImageIcon icon = new ImageIcon(getClass().getResource("/images/dialogs/info-sml.png"));
+                    JOptionPane.showMessageDialog(
+                      null, objects, tr("PointInfo") + " " + coordinatesText, JOptionPane.PLAIN_MESSAGE,icon);
+                  }
                 }
 
                 @Override

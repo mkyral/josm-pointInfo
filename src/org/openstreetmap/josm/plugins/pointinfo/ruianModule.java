@@ -19,15 +19,37 @@
 
 package org.openstreetmap.josm.plugins.pointinfo;
 
+import static org.openstreetmap.josm.tools.I18n.tr;
+
+import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.data.osm.OsmPrimitive;
 import org.openstreetmap.josm.data.coor.LatLon;
+import org.openstreetmap.josm.tools.Utils;
+import org.openstreetmap.josm.gui.Notification;
+// import org.openstreetmap.josm.actions.PasteTagsAction;
+import org.openstreetmap.josm.command.AddCommand;
+import org.openstreetmap.josm.command.Command;
+import org.openstreetmap.josm.command.SequenceCommand;
+import org.openstreetmap.josm.data.osm.Node;
+
+import org.openstreetmap.josm.data.osm.Tag;
+import org.openstreetmap.josm.data.osm.TagCollection;
+
 
 import org.json.JSONObject;
 import org.json.JSONArray;
 
 import java.util.*;
+import java.lang.StringBuilder;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import javax.swing.JOptionPane;
+
+/**
+ * Private class to store address places
+ *
+ */
 
 class addrPlaces {
     private long    m_ruian_id;
@@ -80,6 +102,11 @@ class addrPlaces {
 
 }
 
+/**
+ * Private class contains RUIAN data
+ *
+ */
+
 class ruianRecord {
 
     private double   m_coor_lat, m_coor_lon;
@@ -91,8 +118,11 @@ class ruianRecord {
     private int      m_objekt_podlazi;
     private int      m_objekt_byty;
     private String   m_objekt_zpusob_vyuziti;
+    private String   m_objekt_zpusob_vyuziti_key;
+    private String   m_objekt_zpusob_vyuziti_val;
     private String   m_objekt_dokonceni;
     private String   m_objekt_plati_od;
+    private long     m_objekt_adr_id;
     private String   m_objekt_ulice;
     private String   m_objekt_cast_obce;
     private String   m_objekt_obec;
@@ -112,11 +142,18 @@ class ruianRecord {
 
     private ArrayList <addrPlaces> m_adresni_mista;
 
-
+    /**
+    * Constructor
+    *
+    */
     public ruianRecord () {
       init();
     }
 
+    /**
+    * Initialization
+    *
+    */
     private void init () {
 
       m_coor_lat = 0;
@@ -129,8 +166,11 @@ class ruianRecord {
       m_objekt_podlazi = 0;
       m_objekt_byty = 0;
       m_objekt_zpusob_vyuziti = "";
+      m_objekt_zpusob_vyuziti_key = "";
+      m_objekt_zpusob_vyuziti_val = "";
       m_objekt_dokonceni = "";
       m_objekt_plati_od = "";
+      m_objekt_adr_id = 0;
       m_objekt_ulice = "";
       m_objekt_cast_obce = "";
       m_objekt_obec = "";
@@ -151,6 +191,10 @@ class ruianRecord {
 
     }
 
+    /**
+    * Parse given JSON string and fill variables with RUIAN data
+    *
+    */
     public void parseJSON (String jsonStr) {
 
 
@@ -200,6 +244,11 @@ class ruianRecord {
         }
 
         try {
+          m_objekt_adr_id = stavebniObjekt.getLong("adresni_misto_kod");
+        } catch (Exception e) {
+        }
+
+        try {
           m_objekt_ulice = stavebniObjekt.getString("ulice");
         } catch (Exception e) {
         }
@@ -241,6 +290,16 @@ class ruianRecord {
 
         try {
           m_objekt_zpusob_vyuziti = stavebniObjekt.getString("zpusob_vyuziti");
+        } catch (Exception e) {
+        }
+
+        try {
+          m_objekt_zpusob_vyuziti_key = stavebniObjekt.getString("zpusob_vyuziti_key");
+        } catch (Exception e) {
+        }
+
+        try {
+          m_objekt_zpusob_vyuziti_val = stavebniObjekt.getString("zpusob_vyuziti_val");
         } catch (Exception e) {
         }
 
@@ -359,6 +418,10 @@ class ruianRecord {
 
     }
 
+    /**
+     * Return coordinates text representation
+     * @return String coordinatesText
+     */
     public String getTextCoordinates () {
 
       String r = "";
@@ -372,92 +435,347 @@ class ruianRecord {
       return r;
     }
 
+    /**
+     * Return Html text representation
+     * @return String htmlText
+     */
     public String getHtml () {
 
-      String r = "";
+      StringBuilder r = new StringBuilder();
 
-      if (m_objekt_ruian_id == 0 && m_parcela_ruian_id == 0)
-        return r;
+      if (m_objekt_ruian_id == 0 &&
+          m_parcela_ruian_id == 0 &&
+          m_adresni_mista.size() == 0 &&
+          m_ulice_ruian_id == 0 )
+        return "";
 
-      r = "<html>";
-      r += "<br/>";
+      r.append("<html>");
+      r.append("<br/>");
       if (m_objekt_ruian_id > 0) {
-        r += "<i><u>Informace o objektu</u></i><br/>";
-        r += "<b>RUIAN id: </b><a href=http://vdp.cuzk.cz/vdp/ruian/stavebniobjekty/" + m_objekt_ruian_id +">" + m_objekt_ruian_id + "</a><br/>";
-        if (m_objekt_podlazi > 0) r += "<b>Počet podlaží: </b>" + m_objekt_podlazi + "<br/>";
-        if (m_objekt_byty > 0) r += "<b>Počet bytů: </b>" + m_objekt_byty + "<br/>";
-        r += "<b>Způsob využití: </b>" + m_objekt_zpusob_vyuziti + "<br/>";
-        r += "<b>Datum dokončení: </b>" + m_objekt_dokonceni + "<br/>";
-        r += "<b>Platí od: </b>" + m_objekt_plati_od + "<br/>";
-        r += "<br/>";
+        r.append("<i><u>Informace o objektu</u></i>");
+        r.append("&nbsp;&nbsp;<a href=file://tags.copy/building><img src="+getClass().getResource("/images/dialogs/copy-tags.png")+" border=0 alt=\"Vložit tagy do schránky\" ></a><br/>");
+        r.append("<b>RUIAN id: </b><a href=http://vdp.cuzk.cz/vdp/ruian/stavebniobjekty/" + m_objekt_ruian_id +">" + m_objekt_ruian_id + "</a><br/>");
+        if (m_objekt_podlazi > 0) r.append("<b>Počet podlaží: </b>" + m_objekt_podlazi + "<br/>");
+        if (m_objekt_byty > 0) r.append("<b>Počet bytů: </b>" + m_objekt_byty + "<br/>");
+        r.append("<b>Způsob využití: </b>" + m_objekt_zpusob_vyuziti + "<br/>");
+        r.append("<b>Datum dokončení: </b>" + m_objekt_dokonceni + "<br/>");
+        r.append("<b>Platí od: </b>" + m_objekt_plati_od + "<br/>");
+        r.append("<br/>");
+        r.append("<i><u>Informace o adrese</u></i><br/>");
         if (m_adresni_mista.size() > 0) {
-          r += "<b>" + m_objekt_cislo_domovni_typ + ": </b>" + m_objekt_cislo_domovni + " (více vchodů)<br/>";
-          r += "<b>Část obce: </b>" + m_objekt_cast_obce + "<br/>";
-          r += "<b>Obec: </b>" + m_parcela_obec +"<br/>";
-          r += "<b>Okres: </b>" + m_parcela_okres +"<br/>";
-          r += "<b>Kraj: </b>" + m_parcela_kraj +"<br/>";
+          r.append("<b>" + m_objekt_cislo_domovni_typ + "</b> (více adres)<b>: </b>" + m_objekt_cislo_domovni + "<br/>");
+          r.append("<b>Část obce: </b>" + m_objekt_cast_obce + "<br/>");
+          r.append("<b>Obec: </b>" + m_parcela_obec +"<br/>");
+          r.append("<b>Okres: </b>" + m_parcela_okres +"<br/>");
+          r.append("<b>Kraj: </b>" + m_parcela_kraj +"<br/>");
         } else if (m_objekt_cislo_domovni == null || m_objekt_cislo_domovni.isEmpty()) {
-          r += "<b>Budova: </b>" + m_objekt_cislo_domovni_typ + "<br/>";
-          r += "<b>Obec: </b>" + m_parcela_obec +"<br/>";
-          r += "<b>Okres: </b>" + m_parcela_okres +"<br/>";
-          r += "<b>Kraj: </b>" + m_parcela_kraj +"<br/>";
+          r.append("<b>Budova: </b>" + m_objekt_cislo_domovni_typ + "<br/>");
+          r.append("<b>Obec: </b>" + m_parcela_obec +"<br/>");
+          r.append("<b>Okres: </b>" + m_parcela_okres +"<br/>");
+          r.append("<b>Kraj: </b>" + m_parcela_kraj +"<br/>");
         } else {
           String x = "";
+          String x_name = "";
           if ( !m_objekt_cislo_orientacni.isEmpty()) {
             x = "/" + m_objekt_cislo_orientacni;
+            x_name = "/orientační";
           }
-          r += "<b>" + m_objekt_cislo_domovni_typ + ": </b>" + m_objekt_cislo_domovni + x + "<br/>";
-          r += "<b>Ulice: </b>" + m_objekt_ulice + "<br/>";
-          r += "<b>Část obce: </b>" + m_objekt_cast_obce + "<br/>";
-          r += "<b>Obec: </b>" + m_objekt_obec + "<br/>";
-          r += "<b>Okres: </b>" + m_objekt_okres + "<br/>";
-          r += "<b>Kraj: </b>" + m_objekt_kraj + "<br/>";
-          r += "<b>PSČ: </b>" + m_objekt_psc + "<br/>";
+          r.append("<b>RUIAN id: </b><a href=http://vdp.cuzk.cz/vdp/ruian/adresnimista/" + m_objekt_adr_id +">" + m_objekt_adr_id + "</a><br/>");
+          r.append("<b>" + m_objekt_cislo_domovni_typ + x_name + ": </b>" + m_objekt_cislo_domovni + x);
+          r.append("&nbsp;&nbsp;<a href=file://tags.copy/address:0><img src="+getClass().getResource("/images/dialogs/copy-tags.png")+" border=0 alt=\"Vložit tagy do schránky\"></a>");
+          r.append("&nbsp;&nbsp;<a href=file://tags.create/address:0><img src="+getClass().getResource("/images/dialogs/create-addr.png")+" border=0 alt=\"Vytvořit adresní bod\"></a>");
+          r.append("<br/>");
+          if (!m_objekt_ulice.isEmpty()) r.append("<b>Ulice: </b>" + m_objekt_ulice + "<br/>");
+          r.append("<b>Část obce: </b>" + m_objekt_cast_obce + "<br/>");
+          r.append("<b>Obec: </b>" + m_objekt_obec + "<br/>");
+          r.append("<b>Okres: </b>" + m_objekt_okres + "<br/>");
+          r.append("<b>Kraj: </b>" + m_objekt_kraj + "<br/>");
+          r.append("<b>PSČ: </b>" + m_objekt_psc + "<br/>");
         }
-        r += "<br/>";
+        r.append("<br/>");
       }
       if (m_adresni_mista.size() > 0) {
-        System.out.println("am.size() = " + m_adresni_mista.size());
-        r += "<i><u>Adresní místa</u></i><br/>";
-        for (int i=0; i<m_adresni_mista.size(); i++) {
-          r += "<a href=http://vdp.cuzk.cz/vdp/ruian/adresnimista/" + m_adresni_mista.get(i).getRuianID() + ">";
-          r += m_adresni_mista.get(i).getRuianID() + "</a> ";
-          r += m_adresni_mista.get(i).getUlice() + " " + m_adresni_mista.get(i).getCisloDomovni();
-          if (!m_adresni_mista.get(i).getCisloOrientacni().isEmpty()) {
-            r += "/" + m_adresni_mista.get(i).getCisloOrientacni();
-          }
-          r += "<br/>";
+        String x = "";
+        if (m_objekt_cislo_domovni_typ.equals("Číslo evidenční")) {
+          x = "ev.";
         }
-        r += "<br/>";
+        r.append("<i><u>Adresní místa</u></i><br/>");
+        for (int i=0; i<m_adresni_mista.size(); i++) {
+          r.append("<a href=http://vdp.cuzk.cz/vdp/ruian/adresnimista/" + m_adresni_mista.get(i).getRuianID() + ">");
+          r.append(m_adresni_mista.get(i).getRuianID() + "</a> ");
+          r.append(m_adresni_mista.get(i).getUlice() + " " + x + m_adresni_mista.get(i).getCisloDomovni());
+          if (!m_adresni_mista.get(i).getCisloOrientacni().isEmpty()) {
+            r.append("/" + m_adresni_mista.get(i).getCisloOrientacni());
+          }
+          r.append("&nbsp;&nbsp;<a href=file://tags.copy/address:"+i+"><img src="+getClass().getResource("/images/dialogs/copy-tags.png")+" border=0 alt=\"Vložit tagy do schránky\"></a>");
+          r.append("&nbsp;&nbsp;<a href=file://tags.create/address:"+i+"><img src="+getClass().getResource("/images/dialogs/create-addr.png")+" border=0 alt=\"Vytvořit adresní bod\"></a>");
+          r.append("<br/>");
+        }
+        r.append("<br/>");
       }
       if (m_parcela_ruian_id > 0) {
-        r += "<i><u>Informace o pozemku</u></i><br/>";
-        r += "<b>RUIAN id: </b><a href=http://vdp.cuzk.cz/vdp/ruian/parcely/" + m_parcela_ruian_id +">" + m_parcela_ruian_id + "</a><br/>";
-        r += "<b>Druh pozemku: </b>" + m_parcela_druh_pozemku +"<br/>";
-        if (m_parcela_zpusob_vyuziti != "") r += "<b>Způsob využití: </b>" + m_parcela_zpusob_vyuziti +"<br/>";
-        r += "<b>Platí od: </b>" + m_parcela_plati_od +"<br/>";
-        r += "<br/>";
-        r += "<b>Katastrální území: </b>" + m_parcela_katastralni_uzemi +"<br/>";
-        if ( m_objekt_ruian_id == 0) {
-          r += "<b>Obec: </b>" + m_parcela_obec +"<br/>";
-          r += "<b>Okres: </b>" + m_parcela_okres +"<br/>";
-          r += "<b>Kraj: </b>" + m_parcela_kraj +"<br/>";
+        r.append("<i><u>Informace o pozemku</u></i>");
+//         r.append("&nbsp;&nbsp;<a href=file://tags.copy/parcel><img src="+getClass().getResource("/images/dialogs/copy-tags.png")+" border=0 alt=\"Vložit tagy do schránky\"></a>");
+        r.append("<br/>");
+        r.append("<b>RUIAN id: </b><a href=http://vdp.cuzk.cz/vdp/ruian/parcely/" + m_parcela_ruian_id +">" + m_parcela_ruian_id + "</a><br/>");
+        r.append("<b>Druh pozemku: </b>" + m_parcela_druh_pozemku +"<br/>");
+        if (m_parcela_zpusob_vyuziti != "") r.append("<b>Způsob využití: </b>" + m_parcela_zpusob_vyuziti +"<br/>");
+        r.append("<b>Platí od: </b>" + m_parcela_plati_od +"<br/>");
+        r.append("<br/>");
+        r.append("<b>Katastrální území: </b>" + m_parcela_katastralni_uzemi +"<br/>");
+        if (m_objekt_ruian_id == 0) {
+          r.append("<b>Obec: </b>" + m_parcela_obec +"<br/>");
+          r.append("<b>Okres: </b>" + m_parcela_okres +"<br/>");
+          r.append("<b>Kraj: </b>" + m_parcela_kraj +"<br/>");
         }
-        if ( m_ulice_ruian_id > 0) {
-          r += "<br/>";
-          r += "<i><u>Informace o ulici</u></i><br/>";
-          r += "<b>RUIAN id: </b><a href=http://vdp.cuzk.cz/vdp/ruian/ulice/" + m_ulice_ruian_id +">" + m_ulice_ruian_id + "</a><br/>";
-          r += "<b>Jméno: </b>" + m_ulice_jmeno +"<br/>";
-        }
+        r.append("<br/>");
       }
-      r += "<hr/>";
-      r += "<center><i><small>Zdroj: <a href=\"http://www.ruian.cz/\">" + m_source + "</a></small></i></center>";
-      r += "</html>";
+      if (m_ulice_ruian_id > 0) {
+        r.append("<i><u>Informace o ulici</u></i>");
+        r.append("&nbsp;&nbsp;<a href=file://tags.copy/street><img src="+getClass().getResource("/images/dialogs/copy-tags.png")+" border=0 alt=\"Vložit tagy do schránky\"></a><br/>");
+        r.append("<b>RUIAN id: </b><a href=http://vdp.cuzk.cz/vdp/ruian/ulice/" + m_ulice_ruian_id +">" + m_ulice_ruian_id + "</a><br/>");
+        r.append("<b>Jméno: </b>" + m_ulice_jmeno +"<br/>");
+        r.append("<br/>");
+      }
+      r.append("<hr/>");
+      r.append("<center><i><small>Zdroj: <a href=\"http://www.ruian.cz/\">" + m_source + "</a></small></i></center>");
+      r.append("</html>");
 
+      return r.toString();
+    }
+
+    /**
+     * Construct tag string for clipboard
+     * @param k OSM Key
+     * @param v OSM Value
+     * @return String OSM tag string for clipboard
+     */
+    String tagToString (String k, String v) {
+      String r = "\"" + k + "\"=\"" + v + "\"\n";
       return r;
     }
+
+    /**
+     * Prepare OSM keys
+     * @param keyType What to prepare (building, address, parcel. street)
+     * @return String with OSM tags
+     */
+    String getKeys (String keyType) {
+      StringBuilder c = new StringBuilder();
+
+      // Copy building tags to clipboard
+      if (keyType.equals("building") && m_objekt_ruian_id > 0) {
+        c.append(tagToString("ref:ruian", Long.toString(m_objekt_ruian_id)));
+        if (m_objekt_zpusob_vyuziti_key.length() > 0 &&
+            m_objekt_zpusob_vyuziti_val.length() > 0
+           ) {
+          c.append(tagToString(m_objekt_zpusob_vyuziti_key, m_objekt_zpusob_vyuziti_val));
+        }
+        if (m_objekt_podlazi > 0) {
+          c.append(tagToString("building:levels", Integer.toString(m_objekt_podlazi)));
+        }
+        if (m_objekt_byty > 0) {
+          c.append(tagToString("building:flats", Integer.toString(m_objekt_byty)));
+        }
+        if (m_objekt_dokonceni.length() > 0) {
+          c.append(tagToString("start_date", m_objekt_dokonceni));
+        }
+        c.append(tagToString("source", "cuzk:ruian"));
+      }
+
+      // Copy address tags to clipboard
+      if (keyType.startsWith("address")) {
+        if (m_adresni_mista.size() == 0) {
+          // Only one address place
+          if (! m_objekt_cislo_domovni_typ.equals("Číslo evidenční")) {
+            // Cislo popisne
+            c.append(tagToString("addr:conscriptionnumber", m_objekt_cislo_domovni));
+          } else {
+            // Cislo evidencni
+            c.append(tagToString("addr:provisionalnumber", m_objekt_cislo_domovni));
+          }
+
+          // Cislo orientacni
+          if (!m_objekt_cislo_orientacni.isEmpty()) {
+            c.append(tagToString("addr:streetnumber", m_objekt_cislo_orientacni));
+          }
+
+          // Domovni cislo
+          StringBuilder addr = new StringBuilder();
+          if (! m_objekt_cislo_domovni_typ.equals("Číslo evidenční")) {
+            addr.append(m_objekt_cislo_domovni);
+          } else {
+            addr.append("ev."+m_objekt_cislo_domovni);
+          }
+          if (!m_objekt_cislo_orientacni.isEmpty()) {
+            addr.append("/" + m_objekt_cislo_orientacni);
+          }
+          c.append(tagToString("addr:housenumber", addr.toString()));
+
+          // Street
+          if (!m_objekt_ulice.isEmpty()) {
+            c.append(tagToString("addr:street", m_objekt_ulice));
+          }
+          //RUIAN ID
+          if (m_objekt_adr_id > 0) {
+            c.append(tagToString("ref:ruian", Long.toString(m_objekt_adr_id)));
+          }
+        } else {
+          // More address places
+          String[] key = keyType.split(":");
+          int i = new Integer(key[1]);
+          System.out.println("Address ID: " + i);
+
+          if (! m_objekt_cislo_domovni_typ.equals("Číslo evidenční")) {
+            // Cislo popisne
+            c.append(tagToString("addr:conscriptionnumber", m_adresni_mista.get(i).getCisloDomovni()));
+          } else {
+            // Cislo evidencni
+            c.append(tagToString("addr:provisionalnumber", m_adresni_mista.get(i).getCisloDomovni()));
+          }
+
+          // Cislo orientacni
+          if (!m_adresni_mista.get(i).getCisloOrientacni().isEmpty()) {
+            c.append(tagToString("addr:streetnumber", m_adresni_mista.get(i).getCisloOrientacni()));
+          }
+
+          // Domovni cislo
+          StringBuilder addr = new StringBuilder();
+          if (! m_objekt_cislo_domovni_typ.equals("Číslo evidenční")) {
+            addr.append(m_adresni_mista.get(i).getCisloDomovni());
+          } else {
+            addr.append("ev." + m_adresni_mista.get(i).getCisloDomovni());
+          }
+          if (!m_adresni_mista.get(i).getCisloOrientacni().isEmpty()) {
+            addr.append("/" + m_adresni_mista.get(i).getCisloOrientacni());
+          }
+          c.append(tagToString("addr:housenumber", addr.toString()));
+
+          // Street
+          if (!m_adresni_mista.get(i).getUlice().isEmpty()) {
+            c.append(tagToString("addr:street", m_adresni_mista.get(i).getUlice()));
+          }
+
+          //RUIAN ID
+            c.append(tagToString("ref:ruian", Long.toString(m_adresni_mista.get(i).getRuianID())));
+        }
+
+        // Common address parts
+        StringBuilder is_in = new StringBuilder();
+
+        // Place
+        if (!m_objekt_cast_obce.isEmpty() && !m_objekt_cast_obce.equals(m_objekt_obec)) {
+          c.append(tagToString("addr:place", m_objekt_cast_obce));
+          is_in.append(m_objekt_cast_obce + ", ");
+        }
+
+        // City
+        if (!m_objekt_obec.isEmpty()) {
+          c.append(tagToString("addr:city", m_objekt_obec));
+          is_in.append(m_objekt_obec + ", ");
+        }
+
+        // Postcode
+        if (!m_objekt_psc.isEmpty()) {
+          c.append(tagToString("addr:postcode", m_objekt_psc));
+        }
+
+        // Region
+        if (!m_objekt_kraj.isEmpty()) {
+          is_in.append(m_objekt_kraj + ", ");
+        }
+
+        // Country
+        c.append(tagToString("addr:country", "CZ"));
+        is_in.append("CZ");
+
+        c.append(tagToString("is_in", is_in.toString()));
+
+        // Source
+        c.append(tagToString("source:addr", "cuzk:ruian"));
+      }
+
+      // Copy parcel tags to clipboard
+
+      // Copy street tags to clipboard
+      if (keyType.equals("street") && m_ulice_ruian_id > 0) {
+        c.append(tagToString("ref:ruian", Long.toString(m_ulice_ruian_id)));
+        c.append(tagToString("name", m_ulice_jmeno));
+        c.append(tagToString("source", "cuzk:ruian"));
+      }
+
+      return c.toString();
+    }
+
+    /**
+     * Create new address poing on current location with given tags
+     * @param t OSM tags in string
+     */
+    void createAddrPoint (String t) {
+      Collection<Command> commands = new LinkedList<Command>();
+      Node node = new Node(new LatLon(m_coor_lat, m_coor_lon));
+      commands.add(new AddCommand(node));
+
+      Collection<OsmPrimitive> coll = new LinkedList<OsmPrimitive>();
+      coll.add(node);
+
+      TagCollection tc = new TagCollection();
+      ArrayList <String> list = new ArrayList<String>(Arrays.asList(t.split("\n")));
+      for (String line : list) {
+        String[] tag = line.split("\"=\"");
+        System.out.println("<" + tag[0] + ">. <" + tag[1] +">");
+        tc.add(new Tag(tag[0].substring(1), tag[1].substring(0,tag[1].length()-1)));
+      }
+
+      tc.applyTo(coll);
+
+      Main.main.undoRedo.add(new SequenceCommand(tr("Add new address point"), commands));
+    }
+
+    /**
+     * Perform given action
+     *  e.g.: copy tags to clipboard
+     * @param act Action to be performed
+     */
+    public void performAction(String act) {
+
+      System.out.println("act: " + act.substring(7));
+      String[] params = act.substring(7).split("/");
+      if (!params[0].equals("tags.copy") && !params[0].startsWith("tags.create")) {
+        return;
+      }
+
+      String task = getKeys(params[1]);
+
+      // Copy tags to clipboard
+      if (params[0].equals("tags.copy")) {
+        if (task.length() > 0) {
+          Utils.copyToClipboard(task);
+          Notification note = new Notification(tr("Tags copied to clipboard."));
+          note.setIcon(JOptionPane.INFORMATION_MESSAGE);
+          note.setDuration(Notification.TIME_SHORT);
+          note.show();
+        }
+      }
+
+      // Create address node
+      if (params[0].startsWith("tags.create")) {
+        if (task.length() > 0) {
+          createAddrPoint(task);
+          Notification note = new Notification(tr("New address point added."));
+          note.setIcon(JOptionPane.INFORMATION_MESSAGE);
+          note.setDuration(Notification.TIME_SHORT);
+          note.show();
+        }
+      }
+    }
+
 }
 
+/**
+ * An module for the Czech RUIAN database
+ *
+ */
 public class ruianModule {
 
     private String m_text = "";
@@ -489,7 +807,17 @@ public class ruianModule {
     }
 
     /**
-     * Trace building on position.
+     * Perform given action
+     *  e.g.: copy tags to clipboard
+     * @param act Action to be performed
+     */
+    public void performAction(String act) {
+
+      m_record.performAction(act);
+    }
+
+    /**
+     * Get a information about given position from RUIAN database.
      * @param pos Position on the map
      */
     public void prepareData(LatLon pos) {

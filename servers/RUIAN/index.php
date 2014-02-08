@@ -21,17 +21,18 @@ $query="
           ELSE ''
         END cislo_typ,
         trim(both '{}' from s.cisla_domovni::text) cisla_domovni,
-        b.cislo_orientacni_hodnota || coalesce(b.cislo_orientacni_pismeno, '') cislo_orientacni,
+        am.cislo_orientacni_hodnota || coalesce(am.cislo_orientacni_pismeno, '') cislo_orientacni,
+        am.kod as adresni_misto_kod,
         s.pocet_podlazi, a.nazev, s.plati_od, s.pocet_bytu, s.dokonceni,
-        b.adrp_psc psc, ul.nazev ulice, c.nazev cast_obce,
+        am.adrp_psc psc, ul.nazev ulice, c.nazev cast_obce,
         ob.nazev obec, ok.nazev okres, vu.nazev kraj,
         a.osmtag_k, a.osmtag_v
   from rn_stavebni_objekt s
       left outer join osmtables.zpusob_vyuziti_objektu a on s.zpusob_vyuziti_kod = a.kod
-      left outer join rn_adresni_misto b on b.stavobj_kod = s.kod and not b.deleted
-      left outer join rn_ulice ul on b.ulice_kod = ul.kod and not ul.deleted
+      left outer join rn_adresni_misto am on am.stavobj_kod = s.kod and not am.deleted
+      left outer join rn_ulice ul on am.ulice_kod = ul.kod and not ul.deleted
       left outer join rn_cast_obce c on c.kod = s.cobce_kod and not c.deleted
-      left outer join rn_obec ob on ul.obec_kod = ob.kod and not ob.deleted
+      left outer join rn_obec ob on coalesce(ul.obec_kod, c.obec_kod)  = ob.kod and not ob.deleted
       left outer join rn_okres ok on ob.okres_kod = ok.kod and not ok.deleted
       left outer join rn_vusc vu on ok.vusc_kod = vu.kod and not vu.deleted
   where st_contains(s.hranice,st_transform(st_geomfromtext('POINT(".$lon." ".$lat.")',4326),900913))
@@ -50,6 +51,7 @@ if (pg_num_rows($result) > 0)
            "cislo_domovni" => $row["cisla_domovni"],
            "cislo_domovni_typ" => $row["cislo_typ"],
            "cislo_orientacni" => $row["cislo_orientacni"],
+           "adresni_misto_kod" => $row["adresni_misto_kod"],
            "ulice" => $row["ulice"],
            "cast_obce" => $row["cast_obce"],
            "obec" => $row["obec"],
