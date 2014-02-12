@@ -25,6 +25,7 @@ $query="
         am.kod as adresni_misto_kod,
         s.pocet_podlazi, a.nazev, s.plati_od, s.pocet_bytu, s.dokonceni,
         am.adrp_psc psc, ul.nazev ulice, c.nazev cast_obce,
+        momc.nazev mestska_cast,
         ob.nazev obec, ok.nazev okres, vu.nazev kraj,
         a.osmtag_k, a.osmtag_v
   from rn_stavebni_objekt s
@@ -32,6 +33,7 @@ $query="
       left outer join rn_adresni_misto am on am.stavobj_kod = s.kod and not am.deleted
       left outer join rn_ulice ul on am.ulice_kod = ul.kod and not ul.deleted
       left outer join rn_cast_obce c on c.kod = s.cobce_kod and not c.deleted
+      left outer join rn_momc momc on momc.kod = s.momc_kod and not momc.deleted
       left outer join rn_obec ob on coalesce(ul.obec_kod, c.obec_kod)  = ob.kod and not ob.deleted
       left outer join rn_okres ok on ob.okres_kod = ok.kod and not ok.deleted
       left outer join rn_vusc vu on ok.vusc_kod = vu.kod and not vu.deleted
@@ -54,6 +56,7 @@ if (pg_num_rows($result) > 0)
            "adresni_misto_kod" => $row["adresni_misto_kod"],
            "ulice" => $row["ulice"],
            "cast_obce" => $row["cast_obce"],
+           "mestska_cast" => $row["mestska_cast"],
            "obec" => $row["obec"],
            "okres" => $row["okres"],
            "kraj" => $row["kraj"],
@@ -158,7 +161,7 @@ $query="
         where not deleted
         order by definicni_cara <->
                 st_transform(st_setsrid(st_makepoint(".$lon.",".$lat."),4326),900913)
-        limit 100) as u
+        limit 500) as u
   where st_distance( (st_transform(u.definicni_cara,4326))::geography, (st_setsrid(st_makepoint(".$lon.",".$lat."),4326))::geography ) < 10
   order by st_distance( (st_transform(u.definicni_cara,4326))::geography,
                         (st_setsrid(st_makepoint(".$lon.",".$lat."),4326))::geography)

@@ -125,6 +125,7 @@ class ruianRecord {
     private long     m_objekt_adr_id;
     private String   m_objekt_ulice;
     private String   m_objekt_cast_obce;
+    private String   m_objekt_mestska_cast;
     private String   m_objekt_obec;
     private String   m_objekt_okres;
     private String   m_objekt_kraj;
@@ -173,6 +174,7 @@ class ruianRecord {
       m_objekt_adr_id = 0;
       m_objekt_ulice = "";
       m_objekt_cast_obce = "";
+      m_objekt_mestska_cast = "";
       m_objekt_obec = "";
       m_objekt_okres = "";
       m_objekt_kraj = "";
@@ -255,6 +257,11 @@ class ruianRecord {
 
         try {
           m_objekt_cast_obce = stavebniObjekt.getString("cast_obce");
+        } catch (Exception e) {
+        }
+
+        try {
+          m_objekt_mestska_cast = stavebniObjekt.getString("mestska_cast");
         } catch (Exception e) {
         }
 
@@ -357,7 +364,7 @@ class ruianRecord {
           m_parcela_ruian_id = parcela.getLong("ruian_id");
         } catch (Exception e) {
         }
-
+;
         try {
           m_parcela_druh_pozemku = parcela.getString("druh_pozemku");
         } catch (Exception e) {
@@ -465,11 +472,13 @@ class ruianRecord {
         if (m_adresni_mista.size() > 0) {
           r.append("<b>" + m_objekt_cislo_domovni_typ + "</b> (více adres)<b>: </b>" + m_objekt_cislo_domovni + "<br/>");
           r.append("<b>Část obce: </b>" + m_objekt_cast_obce + "<br/>");
+          if (m_objekt_mestska_cast.length() > 0) r.append("<b>Městská část: </b>" + m_objekt_mestska_cast + "<br/>");
           r.append("<b>Obec: </b>" + m_parcela_obec +"<br/>");
           r.append("<b>Okres: </b>" + m_parcela_okres +"<br/>");
           r.append("<b>Kraj: </b>" + m_parcela_kraj +"<br/>");
         } else if (m_objekt_cislo_domovni == null || m_objekt_cislo_domovni.isEmpty()) {
           r.append("<b>Budova: </b>" + m_objekt_cislo_domovni_typ + "<br/>");
+          if (m_objekt_mestska_cast.length() > 0) r.append("<b>Městská část: </b>" + m_objekt_mestska_cast + "<br/>");
           r.append("<b>Obec: </b>" + m_parcela_obec +"<br/>");
           r.append("<b>Okres: </b>" + m_parcela_okres +"<br/>");
           r.append("<b>Kraj: </b>" + m_parcela_kraj +"<br/>");
@@ -487,6 +496,7 @@ class ruianRecord {
           r.append("<br/>");
           if (!m_objekt_ulice.isEmpty()) r.append("<b>Ulice: </b>" + m_objekt_ulice + "<br/>");
           r.append("<b>Část obce: </b>" + m_objekt_cast_obce + "<br/>");
+          if (m_objekt_mestska_cast.length() > 0) r.append("<b>Městská část: </b>" + m_objekt_mestska_cast + "<br/>");
           r.append("<b>Obec: </b>" + m_objekt_obec + "<br/>");
           r.append("<b>Okres: </b>" + m_objekt_okres + "<br/>");
           r.append("<b>Kraj: </b>" + m_objekt_kraj + "<br/>");
@@ -565,7 +575,7 @@ class ruianRecord {
 
       // Copy building tags to clipboard
       if (keyType.equals("building") && m_objekt_ruian_id > 0) {
-        c.append(tagToString("ref:ruian", Long.toString(m_objekt_ruian_id)));
+        c.append(tagToString("ref:ruian:building", Long.toString(m_objekt_ruian_id)));
         if (m_objekt_zpusob_vyuziti_key.length() > 0 &&
             m_objekt_zpusob_vyuziti_val.length() > 0
            ) {
@@ -618,7 +628,7 @@ class ruianRecord {
           }
           //RUIAN ID
           if (m_objekt_adr_id > 0) {
-            c.append(tagToString("ref:ruian", Long.toString(m_objekt_adr_id)));
+            c.append(tagToString("ref:ruian:addr", Long.toString(m_objekt_adr_id)));
           }
         } else {
           // More address places
@@ -657,7 +667,7 @@ class ruianRecord {
           }
 
           //RUIAN ID
-            c.append(tagToString("ref:ruian", Long.toString(m_adresni_mista.get(i).getRuianID())));
+            c.append(tagToString("ref:ruian:addr", Long.toString(m_adresni_mista.get(i).getRuianID())));
         }
 
         // Common address parts
@@ -667,6 +677,11 @@ class ruianRecord {
         if (!m_objekt_cast_obce.isEmpty() && !m_objekt_cast_obce.equals(m_objekt_obec)) {
           c.append(tagToString("addr:place", m_objekt_cast_obce));
           is_in.append(m_objekt_cast_obce + ", ");
+        }
+
+        if (!m_objekt_mestska_cast.isEmpty()) {
+          c.append(tagToString("addr:suburb", m_objekt_mestska_cast));
+          is_in.append(m_objekt_mestska_cast + ", ");
         }
 
         // City
@@ -699,7 +714,7 @@ class ruianRecord {
 
       // Copy street tags to clipboard
       if (keyType.equals("street") && m_ulice_ruian_id > 0) {
-        c.append(tagToString("ref:ruian", Long.toString(m_ulice_ruian_id)));
+        c.append(tagToString("ref:ruian:street", Long.toString(m_ulice_ruian_id)));
         c.append(tagToString("name", m_ulice_jmeno));
         c.append(tagToString("source", "cuzk:ruian"));
       }
