@@ -35,16 +35,11 @@ import org.openstreetmap.josm.data.osm.Node;
 import org.openstreetmap.josm.data.osm.Tag;
 import org.openstreetmap.josm.data.osm.TagCollection;
 
-
 import org.json.JSONObject;
 import org.json.JSONArray;
 
 import java.util.*;
 import java.lang.StringBuilder;
-
-import java.text.DecimalFormat;
-import java.text.DecimalFormatSymbols;
-import javax.swing.JOptionPane;
 
 /**
  * Private class to store address places
@@ -426,23 +421,6 @@ class ruianRecord {
     }
 
     /**
-     * Return coordinates text representation
-     * @return String coordinatesText
-     */
-    public String getTextCoordinates () {
-
-      String r = "";
-      DecimalFormatSymbols symbols = new DecimalFormatSymbols();
-      symbols.setDecimalSeparator('.');
-      symbols.setGroupingSeparator(' ');
-      DecimalFormat df = new DecimalFormat("#.00000", symbols);
-
-      r = "(" + df.format(m_coor_lat) + ", " +
-                df.format(m_coor_lon) + ")";
-      return r;
-    }
-
-    /**
      * Return Html text representation
      * @return String htmlText
      */
@@ -674,7 +652,7 @@ class ruianRecord {
         StringBuilder is_in = new StringBuilder();
 
         // Place
-        if (!m_objekt_cast_obce.isEmpty() && !m_objekt_cast_obce.equals(m_objekt_obec)) {
+        if (!m_objekt_cast_obce.isEmpty()) {
           c.append(tagToString("addr:place", m_objekt_cast_obce));
           is_in.append(m_objekt_cast_obce + ", ");
         }
@@ -687,12 +665,20 @@ class ruianRecord {
         // City
         if (!m_objekt_obec.isEmpty()) {
           c.append(tagToString("addr:city", m_objekt_obec));
-          is_in.append(m_objekt_obec + ", ");
+          if (!m_objekt_obec.equals(m_objekt_cast_obce)) {
+            is_in.append(m_objekt_obec + ", ");
+          }
         }
 
         // Postcode
         if (!m_objekt_psc.isEmpty()) {
           c.append(tagToString("addr:postcode", m_objekt_psc));
+        }
+
+        // District
+        if (!m_objekt_okres.isEmpty()) {
+          c.append(tagToString("addr:district", m_objekt_okres));
+          is_in.append(m_objekt_okres + ", ");
         }
 
         // Region
@@ -704,7 +690,7 @@ class ruianRecord {
         c.append(tagToString("addr:country", "CZ"));
         is_in.append("CZ");
 
-        c.append(tagToString("is_in", is_in.toString()));
+//         c.append(tagToString("is_in", is_in.toString()));
 
         // Source
         c.append(tagToString("source:addr", "cuzk:ruian"));
@@ -766,10 +752,7 @@ class ruianRecord {
       if (params[0].equals("tags.copy")) {
         if (task.length() > 0) {
           Utils.copyToClipboard(task);
-          Notification note = new Notification(tr("Tags copied to clipboard."));
-          note.setIcon(JOptionPane.INFORMATION_MESSAGE);
-          note.setDuration(Notification.TIME_SHORT);
-          note.show();
+          PointInfoUtils.showNotification(tr("Tags copied to clipboard."), "info");
         }
       }
 
@@ -777,10 +760,7 @@ class ruianRecord {
       if (params[0].startsWith("tags.create")) {
         if (task.length() > 0) {
           createAddrPoint(task);
-          Notification note = new Notification(tr("New address point added."));
-          note.setIcon(JOptionPane.INFORMATION_MESSAGE);
-          note.setDuration(Notification.TIME_SHORT);
-          note.show();
+          PointInfoUtils.showNotification(tr("New address point added."), "info");
         }
       }
     }
@@ -794,7 +774,7 @@ class ruianRecord {
 public class ruianModule {
 
     private String m_text = "";
-    private String URL = "http://poloha.net/~marian/index.php";
+    private String URL = "http://poloha.net/~marian/pointInfo/index.php";
     protected PointInfoServer server = new PointInfoServer();
 
     private ruianRecord m_record = new ruianRecord();
@@ -810,15 +790,6 @@ public class ruianModule {
     public String getHtml() {
 
       return m_record.getHtml();
-    }
-
-    /**
-     * Return coordinates text representation
-     * @return String coordinatesText
-     */
-    public String getTextCoordinates() {
-
-      return m_record.getTextCoordinates();
     }
 
     /**

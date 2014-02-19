@@ -52,7 +52,6 @@ import org.openstreetmap.josm.data.osm.Way;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.gui.MapFrame;
-import org.openstreetmap.josm.gui.Notification;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Shortcut;
 import org.xml.sax.SAXException;
@@ -103,6 +102,7 @@ class PointInfoAction extends MapMode implements MouseListener {
             }
         }
     }
+
     protected void infoAsync(Point clickPoint) {
         cancel = false;
         /**
@@ -171,17 +171,14 @@ class PointInfoAction extends MapMode implements MouseListener {
         try {
               mRuian.prepareData(pos);
               htmlText = mRuian.getHtml();
-              coordinatesText = mRuian.getTextCoordinates();
+              coordinatesText = PointInfoUtils.formatCoordinates(pos.lat(), pos.lon());
 
         } finally {
             progressMonitor.finishTask();
         }
         progressMonitor.invalidate();
         if (htmlText.length() == 0) {
-          Notification note = new Notification(tr("Data not available.")+ "\n(" + pos.toDisplayString() + ")");
-          note.setIcon(JOptionPane.WARNING_MESSAGE);
-          note.setDuration(Notification.TIME_SHORT);
-          note.show();
+          PointInfoUtils.showNotification(tr("Data not available.")+ "\n(" + pos.toDisplayString() + ")", "warning");
           return;
         }
     }
