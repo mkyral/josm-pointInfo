@@ -4,7 +4,8 @@
 
 # PointInfo plugin
 
-This plugin show available information for clicked point from Czech RUIAN database.
+This plugin shows all available information for clicked point from external database.
+Currently, only Czech RUIAN module is available.
 
 
 ##Author
@@ -25,14 +26,14 @@ This plugin show available information for clicked point from Czech RUIAN databa
 
 - Plugin could be easy extend to show another data source.
 - Input is position, output html string that is shown on message.
-- Optionally you can define special links that will be sent back to the module to the performAction method
+- Optionally you can define special links (file://...) that will be sent back to the module to the performAction method
 
 ###The interface:
 
 ```java
 
     /**
-     * Get a information about given position from RUIAN database.
+     * Get a information about given position from external database.
      * @param pos Position on the map
      */
     public void prepareData(LatLon pos) {
