@@ -14,29 +14,10 @@ $data["source"] = "cuzk:ruian";
 // building
 $query="
   select s.kod,
-        CASE
-          WHEN s.typ_kod = 1 THEN 'Číslo popisné'
-          WHEN s.typ_kod = 2 THEN 'Číslo evidenční'
-          WHEN s.typ_kod = 3 THEN 'bez č.p./č.e.'
-          ELSE ''
-        END cislo_typ,
-        trim(both '{}' from s.cisla_domovni::text) cisla_domovni,
-        am.cislo_orientacni_hodnota || coalesce(am.cislo_orientacni_pismeno, '') cislo_orientacni,
-        am.kod as adresni_misto_kod,
         s.pocet_podlazi, a.nazev, s.plati_od, s.pocet_bytu, s.dokonceni,
-        am.adrp_psc psc, ul.nazev ulice, c.nazev cast_obce,
-        momc.nazev mestska_cast,
-        ob.nazev obec, ok.nazev okres, vu.nazev kraj,
         a.osmtag_k, a.osmtag_v
   from rn_stavebni_objekt s
       left outer join osmtables.zpusob_vyuziti_objektu a on s.zpusob_vyuziti_kod = a.kod
-      left outer join rn_adresni_misto am on am.stavobj_kod = s.kod and not am.deleted
-      left outer join rn_ulice ul on am.ulice_kod = ul.kod and not ul.deleted
-      left outer join rn_cast_obce c on c.kod = s.cobce_kod and not c.deleted
-      left outer join rn_momc momc on momc.kod = s.momc_kod and not momc.deleted
-      left outer join rn_obec ob on coalesce(ul.obec_kod, c.obec_kod)  = ob.kod and not ob.deleted
-      left outer join rn_okres ok on ob.okres_kod = ok.kod and not ok.deleted
-      left outer join rn_vusc vu on ok.vusc_kod = vu.kod and not vu.deleted
   where st_contains(s.hranice,st_transform(st_geomfromtext('POINT(".$lon." ".$lat.")',4326),900913))
   and not s.deleted
   limit 1;
@@ -50,17 +31,6 @@ if (pg_num_rows($result) > 0)
 
   $data["stavebni_objekt"] =
     array( "ruian_id" => $row["kod"],
-           "cislo_domovni" => $row["cisla_domovni"],
-           "cislo_domovni_typ" => $row["cislo_typ"],
-           "cislo_orientacni" => $row["cislo_orientacni"],
-           "adresni_misto_kod" => $row["adresni_misto_kod"],
-           "ulice" => $row["ulice"],
-           "cast_obce" => $row["cast_obce"],
-           "mestska_cast" => $row["mestska_cast"],
-           "obec" => $row["obec"],
-           "okres" => $row["okres"],
-           "kraj" => $row["kraj"],
-           "psc" => $row["psc"],
            "pocet_podlazi" => $row["pocet_podlazi"],
            "zpusob_vyuziti" => $row["nazev"],
            "zpusob_vyuziti_key" => $row["osmtag_k"],
@@ -76,12 +46,29 @@ if (pg_num_rows($result) > 0)
 if ($data["stavebni_objekt"]["ruian_id"] > 0)
 {
   $query="
-    select am.kod,
-          am.cislo_domovni,
-          am.cislo_orientacni_hodnota || coalesce(am.cislo_orientacni_pismeno, '') cislo_orientacni,
-          ul.nazev ulice
-    from rn_adresni_misto am
-        left outer join rn_ulice ul on am.ulice_kod = ul.kod
+  select am.kod as adresni_misto_kod,
+         am.stavobj_kod,
+         st_asgeojson(st_transform(am.definicni_bod, 4326)) as pozice,
+         CASE
+           WHEN s.typ_kod = 1 THEN 'Číslo popisné'
+           WHEN s.typ_kod = 2 THEN 'Číslo evidenční'
+           WHEN s.typ_kod = 3 THEN 'bez č.p./č.e.'
+           ELSE ''
+         END cislo_typ,
+         am.cislo_domovni,
+         am.cislo_orientacni_hodnota || coalesce(am.cislo_orientacni_pismeno, '') cislo_orientacni,
+         am.adrp_psc psc, ul.nazev ulice, c.nazev cast_obce,
+         momc.nazev mestska_cast,
+         ob.nazev obec, ok.nazev okres, vu.nazev kraj
+   from ruian.rn_adresni_misto am
+        left outer join rn_stavebni_objekt s on am.stavobj_kod = s.kod and not s.deleted
+        left outer join osmtables.zpusob_vyuziti_objektu a on s.zpusob_vyuziti_kod = a.kod
+        left outer join rn_ulice ul on am.ulice_kod = ul.kod and not ul.deleted
+        left outer join rn_cast_obce c on c.kod = s.cobce_kod and not c.deleted
+        left outer join rn_momc momc on momc.kod = s.momc_kod and not momc.deleted
+        left outer join rn_obec ob on coalesce(ul.obec_kod, c.obec_kod)  = ob.kod and not ob.deleted
+        left outer join rn_okres ok on ob.okres_kod = ok.kod and not ok.deleted
+        left outer join rn_vusc vu on ok.vusc_kod = vu.kod and not vu.deleted
     where am.stavobj_kod = ".$data["stavebni_objekt"]["ruian_id"]."
     and not am.deleted
     order by st_distance( (st_transform(am.definicni_bod,4326))::geography,
@@ -91,17 +78,28 @@ if ($data["stavebni_objekt"]["ruian_id"] > 0)
 
   $result=pg_query($CONNECT,$query);
   $error= pg_last_error($CONNECT);
-  if (pg_num_rows($result) > 1)
+  if (pg_num_rows($result) > 0)
   {
     $am = array();
     for ($i = 0; $i < pg_num_rows($result); $i++)
     {
       $row = pg_fetch_array($result, $i);
+      $geometry=json_decode($row["pozice"], true);
       array_push($am,
-                  array("ruian_id" => $row["kod"],
+                  array("ruian_id" => $row["adresni_misto_kod"],
+                        "pozice" => $geometry['coordinates'],
+                        "budova_kod" => $row["stavobj_kod"],
+                        "cislo_typ" => $row["cislo_typ"],
                         "cislo_domovni" => $row["cislo_domovni"],
                         "cislo_orientacni" => $row["cislo_orientacni"],
-                        "ulice" => $row["ulice"]));
+                        "ulice" => $row["ulice"],
+                        "cast_obce" => $row["cast_obce"],
+                        "mestska_cast" => $row["mestska_cast"],
+                        "obec" => $row["obec"],
+                        "okres" => $row["okres"],
+                        "kraj" => $row["kraj"],
+                        "psc" => $row["psc"]
+                        ));
     }
       $data["adresni_mista"] = $am;
   } else
@@ -153,7 +151,7 @@ else
 
   $result=pg_query($CONNECT,$query);
   $error= pg_last_error($CONNECT);
-  if (pg_num_rows($result) > 1)
+  if (pg_num_rows($result) > 0)
   {
     $am = array();
     for ($i = 0; $i < pg_num_rows($result); $i++)
@@ -173,7 +171,7 @@ else
                         "obec" => $row["obec"],
                         "okres" => $row["okres"],
                         "kraj" => $row["kraj"],
-                        "psc" => $row["psc"],
+                        "psc" => $row["psc"]
                         ));
     }
     $data["adresni_mista"] = $am;
@@ -187,16 +185,10 @@ else
 
 // land
 $query="
-  select s.id, a.nazev as druh_pozemku, b.nazev as zpusob_vyuziti, s.plati_od,
-         ku.nazev katastralni_uzemi,
-         ob.nazev obec, ok.nazev okres, vu.nazev kraj
+  select s.id, a.nazev as druh_pozemku, b.nazev as zpusob_vyuziti, s.plati_od
   from rn_parcela s
       left outer join osmtables.druh_pozemku a on s.druh_pozemku_kod = a.kod
       left outer join osmtables.zpusob_vyuziti_pozemku b on s.zpusob_vyu_poz_kod = b.kod
-      left outer join rn_katastralni_uzemi ku on s.katuz_kod = ku.kod and not ku.deleted
-      left outer join rn_obec ob on ku.obec_kod = ob.kod and not ob.deleted
-      left outer join rn_okres ok on ob.okres_kod = ok.kod and not ok.deleted
-      left outer join rn_vusc vu on ok.vusc_kod = vu.kod and not vu.deleted
   where st_contains(s.hranice,st_transform(st_geomfromtext('POINT(".$lon." ".$lat.")',4326),900913))
   and not s.deleted
   limit 1;
@@ -212,11 +204,8 @@ if (pg_num_rows($result) > 0)
     array( "ruian_id" => $row["id"],
            "druh_pozemku" => $row["druh_pozemku"],
            "zpusob_vyuziti" => $row["zpusob_vyuziti"],
-           "plati_od" => $row["plati_od"],
-           "katastralni_uzemi" => $row["katastralni_uzemi"],
-           "obec" => $row["obec"],
-           "okres" => $row["okres"],
-           "kraj" => $row["kraj"]);
+           "plati_od" => $row["plati_od"]
+         );
 } else
 {
 //   echo "error: $error\n";
