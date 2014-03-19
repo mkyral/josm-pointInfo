@@ -525,6 +525,9 @@ class ruianRecord {
         r.append("<i><u>Informace o objektu</u></i>");
         r.append("&nbsp;&nbsp;<a href=file://tags.copy/building><img src="+getClass().getResource("/images/dialogs/copy-tags.png")+" border=0 alt=\"Vložit tagy do schránky\" ></a><br/>");
         r.append("<b>RUIAN id: </b><a href=http://vdp.cuzk.cz/vdp/ruian/stavebniobjekty/" + m_objekt_ruian_id +">" + m_objekt_ruian_id + "</a><br/>");
+        if (m_adresni_mista.size() == 0 ) r.append("<b>Budova: </b> bez č.p./č.e<br/>");
+        else if (m_adresni_mista.get(0).getCisloTyp().equals("Číslo popisné")) r.append("<b>Budova: </b>s číslem popisným<br/>");
+          else r.append("<b>Budova: </b>s číslem evidenčním<br/>");
         if (m_objekt_podlazi > 0) r.append("<b>Počet podlaží: </b>" + m_objekt_podlazi + "<br/>");
         if (m_objekt_byty > 0) r.append("<b>Počet bytů: </b>" + m_objekt_byty + "<br/>");
         r.append("<b>Způsob využití: </b>" + m_objekt_zpusob_vyuziti + "<br/>");
@@ -567,7 +570,7 @@ class ruianRecord {
           r.append("<b>" + m_adresni_mista.get(i).getCisloTyp() + x_name + ": </b>" + m_adresni_mista.get(i).getCisloDomovni() + x);
           r.append("&nbsp;&nbsp;<a href=file://tags.copy/address:"+i+"><img src="+getClass().getResource("/images/dialogs/copy-tags.png")+" border=0 alt=\"Vložit tagy do schránky\"></a>");
           r.append("&nbsp;&nbsp;<a href=file://tags.create/address:"+i+"><img src="+getClass().getResource("/images/dialogs/create-addr.png")+" border=0 alt=\"Vytvořit adresní bod\"></a>");
-          r.append("&nbsp;&nbsp;<a href=file://tags.create-on-place/address:"+i+"><img src="+getClass().getResource("/images/dialogs/create-addr-place.png")+" border=0 alt=\"Vytvořit adresní bod na pozici dle RUIAN\"></a>");
+          r.append("&nbsp;&nbsp;<a href=file://tags.create-on-place/address:"+i+"><img src="+getClass().getResource("/images/dialogs/create-addr-ruian.png")+" border=0 alt=\"Vytvořit adresní bod na pozici dle RUIAN\"></a>");
           r.append("<br/>");
           if (!m_adresni_mista.get(i).getUlice().isEmpty()) r.append("<b>Ulice: </b>" + m_adresni_mista.get(i).getUlice() + "<br/>");
           r.append("<b>Část obce: </b>" + m_adresni_mista.get(i).getCastObce() + "<br/>");
@@ -594,7 +597,7 @@ class ruianRecord {
           }
           r.append("&nbsp;&nbsp;<a href=file://tags.copy/address:"+i+"><img src="+getClass().getResource("/images/dialogs/copy-tags.png")+" border=0 alt=\"Vložit tagy do schránky\"></a>");
           r.append("&nbsp;&nbsp;<a href=file://tags.create/address:"+i+"><img src="+getClass().getResource("/images/dialogs/create-addr.png")+" border=0 alt=\"Vytvořit adresní bod\"></a>");
-          r.append("&nbsp;&nbsp;<a href=file://tags.create-on-place/address:"+i+"><img src="+getClass().getResource("/images/dialogs/create-addr-place.png")+" border=0 alt=\"Vytvořit adresní bod na pozici dle RUIAN\"></a>");
+          r.append("&nbsp;&nbsp;<a href=file://tags.create-on-place/address:"+i+"><img src="+getClass().getResource("/images/dialogs/create-addr-ruian.png")+" border=0 alt=\"Vytvořit adresní bod na pozici dle RUIAN\"></a>");
           r.append("<br/>");
         }
         r.append("<br/>");
@@ -633,52 +636,37 @@ class ruianRecord {
 
       // Near address places
       if (m_adresni_mista.size() > 0 && m_objekt_ruian_id == 0) {
-      String x, x_name;
-      r.append("<i><u>Adresní místa v okolí</u></i><br/>");
-      for (int i=0; i<m_adresni_mista.size(); i++) {
-        x = "";
-        x_name = "";
-        if (m_adresni_mista.get(i).getCisloTyp().equals("Číslo evidenční")) {
-          x = "ev.";
-        }
-        x += m_adresni_mista.get(i).getCisloDomovni();
-        if ( !m_adresni_mista.get(i).getCisloOrientacni().isEmpty()) {
-          x += "/" + m_adresni_mista.get(i).getCisloOrientacni();
-          x_name += "/orientační";
-        }
-
-        r.append("<a href=http://vdp.cuzk.cz/vdp/ruian/adresnimista/" + m_adresni_mista.get(i).getRuianID() +">");
-        if (!m_adresni_mista.get(i).getUlice().isEmpty()) {
-          r.append(m_adresni_mista.get(i).getUlice() + " " + x + "</a>");
-          r.append("&nbsp;&nbsp;<a href=file://tags.copy/address:"+i+"><img src="+getClass().getResource("/images/dialogs/copy-tags.png")+" border=0 alt=\"Vložit tagy do schránky\"></a>");
-          r.append("&nbsp;&nbsp;<a href=file://tags.create/address:"+i+"><img src="+getClass().getResource("/images/dialogs/create-addr.png")+" border=0 alt=\"Vytvořit adresní bod\"></a>");
-          r.append("&nbsp;&nbsp;<a href=file://tags.create-on-place/address:"+i+"><img src="+getClass().getResource("/images/dialogs/create-addr-place.png")+" border=0 alt=\"Vytvořit adresní bod na pozici dle RUIAN\"></a>");
-          r.append("<br/>" + m_adresni_mista.get(i).getObec() );
-        } else {
-          r.append(m_adresni_mista.get(i).getCastObce() + " " + x + "</a>");
-          r.append("&nbsp;&nbsp;<a href=file://tags.copy/address:"+i+"><img src="+getClass().getResource("/images/dialogs/copy-tags.png")+" border=0 alt=\"Vložit tagy do schránky\"></a>");
-          r.append("&nbsp;&nbsp;<a href=file://tags.create/address:"+i+"><img src="+getClass().getResource("/images/dialogs/create-addr.png")+" border=0 alt=\"Vytvořit adresní bod\"></a>");
-          r.append("&nbsp;&nbsp;<a href=file://tags.create-on-place/address:"+i+"><img src="+getClass().getResource("/images/dialogs/create-addr-place.png")+" border=0 alt=\"Vytvořit adresní bod na pozici dle RUIAN\"></a>");
-          if (!m_adresni_mista.get(i).getCastObce().equals(m_adresni_mista.get(i).getObec())) {
-            r.append("<br/>" + m_adresni_mista.get(i).getObec());
+        String x, x_name;
+        r.append("<i><u>Adresní místa v okolí</u></i><br/>");
+        for (int i=0; i<m_adresni_mista.size(); i++) {
+          x = "";
+          x_name = "";
+          if (m_adresni_mista.get(i).getCisloTyp().equals("Číslo evidenční")) {
+            x = "ev.";
           }
-        }
-        r.append("<br/>");
+          x += m_adresni_mista.get(i).getCisloDomovni();
+          if ( !m_adresni_mista.get(i).getCisloOrientacni().isEmpty()) {
+            x += "/" + m_adresni_mista.get(i).getCisloOrientacni();
+            x_name += "/orientační";
+          }
 
-//           r.append("<b>RUIAN id: </b><a href=http://vdp.cuzk.cz/vdp/ruian/adresnimista/" + m_adresni_mista.get(i).getRuianID() +">" + m_adresni_mista.get(i).getRuianID() + "</a>&nbsp;&nbsp;");
-//           r.append("<b>(budova: </b><a href=http://vdp.cuzk.cz/vdp/ruian/stavebniobjekty/" + m_adresni_mista.get(i).getBudovaID() +">" + m_adresni_mista.get(i).getBudovaID() + "</a>)<br/>");
-//           r.append("<b>" + m_adresni_mista.get(i).getCisloTyp() + x_name + ": </b>" + m_adresni_mista.get(i).getCisloDomovni() + x);
-//           r.append("&nbsp;&nbsp;<a href=file://tags.copy/address:"+i+"><img src="+getClass().getResource("/images/dialogs/copy-tags.png")+" border=0 alt=\"Vložit tagy do schránky\"></a>");
-//           r.append("&nbsp;&nbsp;<a href=file://tags.create/address:"+i+"><img src="+getClass().getResource("/images/dialogs/create-addr.png")+" border=0 alt=\"Vytvořit adresní bod\"></a>");
-//           r.append("<br/>");
-//           if (!m_adresni_mista.get(i).getUlice().isEmpty()) r.append("<b>Ulice: </b>" + m_adresni_mista.get(i).getUlice() + "<br/>");
-//           r.append("<b>Část obce: </b>" + m_adresni_mista.get(i).getCastObce() + "<br/>");
-//           if (m_adresni_mista.get(i).getMestskaCast().length() > 0) r.append("<b>Městská část: </b>" + m_adresni_mista.get(i).getMestskaCast() + "<br/>");
-//           r.append("<b>Obec: </b>" + m_adresni_mista.get(i).getObec() + "<br/>");
-//           r.append("<b>Okres: </b>" + m_adresni_mista.get(i).getOkres() + "<br/>");
-//           r.append("<b>Kraj: </b>" + m_adresni_mista.get(i).getKraj() + "<br/>");
-//           r.append("<b>PSČ: </b>" + m_adresni_mista.get(i).getPsc() + "<br/>");
-//           r.append("<br/>");
+          r.append("<a href=http://vdp.cuzk.cz/vdp/ruian/adresnimista/" + m_adresni_mista.get(i).getRuianID() +">");
+          if (!m_adresni_mista.get(i).getUlice().isEmpty()) {
+            r.append(m_adresni_mista.get(i).getUlice() + " " + x + "</a>");
+            r.append("&nbsp;&nbsp;<a href=file://tags.copy/address:"+i+"><img src="+getClass().getResource("/images/dialogs/copy-tags.png")+" border=0 alt=\"Vložit tagy do schránky\"></a>");
+            r.append("&nbsp;&nbsp;<a href=file://tags.create/address:"+i+"><img src="+getClass().getResource("/images/dialogs/create-addr.png")+" border=0 alt=\"Vytvořit adresní bod\"></a>");
+            r.append("&nbsp;&nbsp;<a href=file://tags.create-on-place/address:"+i+"><img src="+getClass().getResource("/images/dialogs/create-addr-ruian.png")+" border=0 alt=\"Vytvořit adresní bod na pozici dle RUIAN\"></a>");
+            r.append("<br/>" + m_adresni_mista.get(i).getObec() );
+          } else {
+            r.append(m_adresni_mista.get(i).getCastObce() + " " + x + "</a>");
+            r.append("&nbsp;&nbsp;<a href=file://tags.copy/address:"+i+"><img src="+getClass().getResource("/images/dialogs/copy-tags.png")+" border=0 alt=\"Vložit tagy do schránky\"></a>");
+            r.append("&nbsp;&nbsp;<a href=file://tags.create/address:"+i+"><img src="+getClass().getResource("/images/dialogs/create-addr.png")+" border=0 alt=\"Vytvořit adresní bod\"></a>");
+            r.append("&nbsp;&nbsp;<a href=file://tags.create-on-place/address:"+i+"><img src="+getClass().getResource("/images/dialogs/create-addr-ruian.png")+" border=0 alt=\"Vytvořit adresní bod na pozici dle RUIAN\"></a>");
+            if (!m_adresni_mista.get(i).getCastObce().equals(m_adresni_mista.get(i).getObec())) {
+              r.append("<br/>" + m_adresni_mista.get(i).getObec());
+            }
+          }
+          r.append("<br/>");
         }
       }
       r.append("<hr/>");
@@ -888,7 +876,7 @@ class ruianRecord {
 public class ruianModule {
 
     private String m_text = "";
-    private String URL = "http://josm.poloha.net/pointInfo/test/index.php";
+    private String URL = "http://josm.poloha.net/pointInfo/v2/index.php";
     protected PointInfoServer server = new PointInfoServer();
 
     private ruianRecord m_record = new ruianRecord();

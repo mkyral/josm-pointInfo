@@ -68,24 +68,28 @@ class PointInfoAction extends MapMode implements MouseListener {
     private String coordinatesText = "";
 
     public PointInfoAction(MapFrame mapFrame) {
-        super(tr("Point info"), "info-sml", tr("Point info."), Shortcut.registerShortcut("tools:pointInfo", tr("Tool: {0}", tr("Point info")), KeyEvent.VK_X, Shortcut.CTRL), mapFrame, getCursor());
+        super(tr("Point info"), "info-sml", tr("Point info."), Shortcut.registerShortcut("tools:pointInfo", tr("Tool: {0}", tr("Point info")), KeyEvent.VK_X, Shortcut.CTRL_SHIFT), mapFrame, getCursor());
     }
 
     @Override
     public void enterMode() {
+      System.out.println("enterMode() - start");
         if (!isEnabled()) {
             return;
         }
         super.enterMode();
         Main.map.mapView.setCursor(getCursor());
         Main.map.mapView.addMouseListener(this);
+      System.out.println("enterMode() - end");
 
     }
 
     @Override
     public void exitMode() {
+      System.out.println("exitMode() - start");
         super.exitMode();
         Main.map.mapView.removeMouseListener(this);
+      System.out.println("exitMode() - end");
     }
 
     private static Cursor getCursor() {
