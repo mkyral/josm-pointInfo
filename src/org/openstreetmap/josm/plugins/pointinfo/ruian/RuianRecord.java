@@ -634,12 +634,14 @@ class RuianRecord {
 
         String icon_ext_link = "<img src=" +getClass().getResource(
                 "/images/dialogs/open-external-link.png")+" border=0 alt=\"Zobrazit na stránkách RUIAN\"/>";
+        String icon_ext_link_owners = "<img src=" +getClass().getResource(
+                "/images/dialogs/open-external-link-owners.png")+" border=0 alt=\"Zobrazit vlastníky\"/>";
         String icon_copy_tags = "<img src=" +getClass().getResource(
-                "/images/dialogs/copy-tags.png")+" border=0 alt=\"Zobrazit na stránkách RUIAN\"/>";
+                "/images/dialogs/copy-tags.png")+" border=0 alt=\"Kopírovat tagy\"/>";
         String icon_create_addr = "<img src=" +getClass().getResource(
-                "/images/dialogs/create-addr.png")+" border=0 alt=\"Zobrazit na stránkách RUIAN\"/>";
+                "/images/dialogs/create-addr.png")+" border=0 alt=\"Vytvořit adresní bod\"/>";
         String icon_create_addr_ruian = "<img src=" +getClass().getResource(
-                "/images/dialogs/create-addr-ruian.png")+" border=0 alt=\"Zobrazit na stránkách RUIAN\"/>";
+                "/images/dialogs/create-addr-ruian.png")+" border=0 alt=\"Vytvořit adresní bod dle RUIANu\"/>";
         String icon_ruian_error = "<img src=" +getClass().getResource(
                 "/images/dialogs/create-bug-report.png")+" border=0 alt=\"Nahlásit problém v datech\"/>";
         // CHECKSTYLE.OFF: LineLength
@@ -655,6 +657,7 @@ class RuianRecord {
         String url_obec = "http://vdp.cuzk.cz/vdp/ruian/obce/";
         String url_okres = "http://vdp.cuzk.cz/vdp/ruian/okresy/";
         String url_kraj = "http://vdp.cuzk.cz/vdp/ruian/vusc/";
+        String url_vlastnici = "http://vdp.cuzk.cz/vdp/ruian/vlastnici?typ=";
 
         String url_ruian_error = "http://ruian.poloha.net/building.php?kod=";
 
@@ -673,6 +676,7 @@ class RuianRecord {
             r.append("<i><u>Informace o budově</u></i><br/>")
              .append("<b>RUIAN id: </b>"+ m_objekt_ruian_id +"&nbsp;&nbsp;<a href="+ url_stavebni_objekt + m_objekt_ruian_id +">"
                     + icon_ext_link + "</a>")
+             .append("&nbsp;&nbsp;<a href="+ url_vlastnici + "so&id=" + m_objekt_ruian_id + ">"+ icon_ext_link_owners +"</a>")
              .append("&nbsp;&nbsp;<a href=file://tags.copy/building>"+ icon_copy_tags +"</a>")
              .append("&nbsp;&nbsp;<a href=" + url_ruian_error + m_objekt_ruian_id + ">"+ icon_ruian_error +"</a><br/>");
             if (m_adresni_mista.size() == 0) r.append("<b>Budova: </b> bez č.p./č.e<br/>");
@@ -809,7 +813,8 @@ class RuianRecord {
             r.append("<i><u>Informace o pozemku</u></i>")
              .append("<br/>")
              .append("<b>RUIAN id: </b>"+ m_parcela_ruian_id +"&nbsp;&nbsp;<a href="+ url_parcela + m_parcela_ruian_id +">"
-                    + icon_ext_link + "</a><br/>")
+                    + icon_ext_link + "</a>")
+             .append("&nbsp;&nbsp;<a href="+ url_vlastnici + "pa&id=" + m_parcela_ruian_id + ">"+ icon_ext_link_owners +"</a><br/>")
             // .append("&nbsp;&nbsp;<a href=file://tags.copy/parcel>"+ icon_copy_tags +"</a>")
              .append("<b>Druh pozemku: </b>" + m_parcela_druh_pozemku +"<br/>");
             if (m_parcela_zpusob_vyuziti != "") r.append("<b>Způsob využití: </b>" + m_parcela_zpusob_vyuziti +"<br/>");
