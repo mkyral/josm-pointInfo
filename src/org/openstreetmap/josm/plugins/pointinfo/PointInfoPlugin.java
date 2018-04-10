@@ -12,6 +12,7 @@ import org.openstreetmap.josm.gui.MainMenu;
 import org.openstreetmap.josm.plugins.Plugin;
 import org.openstreetmap.josm.plugins.PluginInformation;
 import org.openstreetmap.josm.plugins.pointinfo.ruian.RuianModule;
+import org.openstreetmap.josm.plugins.pointinfo.catastro.CatastroModule;
 
 /**
  * This is the main class for the PointInfo plugin.
@@ -22,6 +23,7 @@ public class PointInfoPlugin extends Plugin {
     private static final HashMap<String, AbstractPointInfoModule> modules = new HashMap<>();
     static {
         registerModule(new RuianModule());
+        registerModule(new CatastroModule());
     }
 
     /**
