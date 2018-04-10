@@ -24,7 +24,7 @@ import org.openstreetmap.josm.gui.MapFrame;
 import org.openstreetmap.josm.gui.PleaseWaitRunnable;
 import org.openstreetmap.josm.gui.progress.ProgressMonitor;
 import org.openstreetmap.josm.gui.util.GuiHelper;
-import org.openstreetmap.josm.plugins.pointinfo.ruian.RuianModule;
+import org.openstreetmap.josm.plugins.pointinfo.AbstractPointInfoModule;
 import org.openstreetmap.josm.tools.ImageProvider;
 import org.openstreetmap.josm.tools.Logging;
 import org.openstreetmap.josm.tools.OpenBrowser;
@@ -36,7 +36,7 @@ class PointInfoAction extends MapMode implements MouseListener {
     private static final long serialVersionUID = 1L;
 
     protected boolean cancel;
-    protected AbstractPointInfoModule module = new RuianModule();
+    protected AbstractPointInfoModule module;
 
     private String htmlText = "";
     private String coordinatesText = "";
@@ -73,6 +73,7 @@ class PointInfoAction extends MapMode implements MouseListener {
          * Positional data
          */
         final LatLon pos = MainApplication.getMap().mapView.getLatLon(clickPoint.x, clickPoint.y);
+        module = PointInfoPlugin.getModule();
 
         try {
             PleaseWaitRunnable infoTask = new PleaseWaitRunnable(tr("Connecting server")) {
@@ -94,10 +95,10 @@ class PointInfoAction extends MapMode implements MouseListener {
                         msgLabel.setOpaque(false);
                         msgLabel.addHyperlinkListener(hle -> {
                             if (HyperlinkEvent.EventType.ACTIVATED.equals(hle.getEventType())) {
+                                Logging.info(hle.getURL().toString());
                                 if (hle.getURL() == null || hle.getURL().toString().isEmpty()) {
                                     return;
                                 }
-                                System.out.println("URL: "+ hle.getURL());
                                 if (!hle.getURL().toString().startsWith("http")) {
                                     module.performAction(hle.getURL().toString());
                                 } else {
