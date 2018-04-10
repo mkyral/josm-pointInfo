@@ -36,7 +36,7 @@ class PointInfoAction extends MapMode implements MouseListener {
     private static final long serialVersionUID = 1L;
 
     protected boolean cancel;
-    protected RuianModule mRuian = new RuianModule();
+    protected AbstractPointInfoModule module = new RuianModule();
 
     private String htmlText = "";
     private String coordinatesText = "";
@@ -99,7 +99,7 @@ class PointInfoAction extends MapMode implements MouseListener {
                                 }
                                 System.out.println("URL: "+ hle.getURL());
                                 if (!hle.getURL().toString().startsWith("http")) {
-                                    mRuian.performAction(hle.getURL().toString());
+                                    module.performAction(hle.getURL().toString());
                                 } else {
                                     String ret = OpenBrowser.displayUrl(hle.getURL().toString());
                                     if (ret != null) {
@@ -131,8 +131,8 @@ class PointInfoAction extends MapMode implements MouseListener {
 
         progressMonitor.beginTask(null, 3);
         try {
-            mRuian.prepareData(pos);
-            htmlText = mRuian.getHtml();
+            module.prepareData(pos);
+            htmlText = module.getHtml();
             coordinatesText = PointInfoUtils.formatCoordinates(pos.lat(), pos.lon());
 
         } finally {

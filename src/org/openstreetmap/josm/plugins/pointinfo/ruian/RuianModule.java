@@ -7,13 +7,16 @@ import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.tools.HttpClient;
 import org.openstreetmap.josm.tools.Logging;
 
+import org.openstreetmap.josm.plugins.pointinfo.AbstractPointInfoModule;
+
 /**
  * A module for the Czech RUIAN database
  * @author Marián Kyral
  */
-public class RuianModule {
+public class RuianModule extends AbstractPointInfoModule {
 
-    private String URL = "http://josm.poloha.net/pointInfo/v4/index.php";
+    private static final String moduleName = "RUIAN";
+    private static final String URL = "http://josm.poloha.net/pointInfo/v4/index.php";
 
     private RuianRecord m_record = new RuianRecord();
 
@@ -21,19 +24,12 @@ public class RuianModule {
 
     }
 
-    /**
-     * Return Html text representation
-     * @return String htmlText
-     */
+    @Override
     public String getHtml() {
         return m_record.getHtml();
     }
 
-    /**
-     * Perform given action
-     *  e.g.: copy tags to clipboard
-     * @param act Action to be performed
-     */
+    @Override
     public void performAction(String act) {
         m_record.performAction(act);
     }
@@ -42,6 +38,7 @@ public class RuianModule {
      * Get a information about given position from RUIAN database.
      * @param pos Position on the map
      */
+    @Override
     public void prepareData(LatLon pos) {
         try {
             String request = URL + "?lat=" + pos.lat() + "&lon=" + pos.lon();
@@ -49,5 +46,10 @@ public class RuianModule {
         } catch (Exception e) {
             Logging.warn(e);
         }
+    }
+
+    @Override
+    public String getName() {
+        return moduleName;   
     }
 }
