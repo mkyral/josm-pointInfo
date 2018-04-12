@@ -73,9 +73,9 @@ class PointInfoAction extends MapMode implements MouseListener {
          * Positional data
          */
         final LatLon pos = MainApplication.getMap().mapView.getLatLon(clickPoint.x, clickPoint.y);
-        module = PointInfoPlugin.getModule();
 
         try {
+            module = PointInfoPlugin.getModule(pos);
             PleaseWaitRunnable infoTask = new PleaseWaitRunnable(tr("Connecting server")) {
                 @Override
                 protected void realRun() throws SAXException {

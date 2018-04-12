@@ -1,11 +1,14 @@
 // License: GPL. For details, see LICENSE file.
 package org.openstreetmap.josm.plugins.pointinfo;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 
 import org.openstreetmap.josm.Main;
+import org.openstreetmap.josm.data.coor.LatLon;
 import org.openstreetmap.josm.gui.preferences.PreferenceSetting;
 import org.openstreetmap.josm.gui.MainApplication;
 import org.openstreetmap.josm.gui.MainMenu;
@@ -57,14 +60,30 @@ public class PointInfoPlugin extends Plugin {
     }
 
     /**
-     * Returns the currently selected module
-     * @return currentModule
-     */
-    public static AbstractPointInfoModule getModule() {
-        AbstractPointInfoModule r = modules.get(Main.pref.get("plugin.pointinfo.module", "RUIAN"));
-        if (r == null) {
-            r = modules.get("RUIAN");
+     * Returns a valid module for this point. If auto mode is selected, returns
+     * the first valid module for the area in the given position 
+     the currently selected module
+     * @return module
+     * @throws IOException if any IO error occurs.
+    */
+    public static AbstractPointInfoModule getModule(LatLon pos) throws IOException {
+        AbstractPointInfoModule module;
+        module = null;
+        if (Main.pref.getBoolean("plugin.pointinfo.automode", true)) {
+            ReverseRecord r = ReverseFinder.queryNominatim(pos);
+            Iterator i = modules.values().iterator();
+            while (module == null && i.hasNext()) {
+                AbstractPointInfoModule m = (AbstractPointInfoModule) i.next();
+                if (r.matchAnyArea(m.getArea())) {
+                    module = m;
+                }
+            }
+        } else {
+            module = modules.get(Main.pref.get("plugin.pointinfo.module", "RUIAN"));
         }
-        return r;
+        if (module == null) {
+            module = modules.get("RUIAN");
+        }
+        return module;
     }
 }
