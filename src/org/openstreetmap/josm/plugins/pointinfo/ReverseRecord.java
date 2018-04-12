@@ -72,7 +72,7 @@ class ReverseRecord {
      * @return match
      */
     public Boolean matchAnyArea(String area) {
-s        if (area.equals(countryCode)) return true;
+        if (area.equals(countryCode)) return true;
         if (area.equals(country)) return true;
         if (area.equals(state)) return true;
         if (area.equals(stateDistrict)) return true;
