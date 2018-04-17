@@ -29,4 +29,10 @@ public abstract class AbstractPointInfoModule {
      * @return String name
      */
     public abstract String getName();
+
+    /**
+     * Returns the name of the area (country, state) where this module is valid
+     * @return String areaName
+     */
+    public abstract String getArea();
 }

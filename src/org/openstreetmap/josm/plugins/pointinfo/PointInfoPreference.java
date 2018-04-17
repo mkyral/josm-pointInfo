@@ -7,6 +7,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 
 import javax.swing.Box;
+import javax.swing.JCheckBox;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -22,6 +23,7 @@ import org.openstreetmap.josm.tools.GBC;
 public class PointInfoPreference extends DefaultTabPreferenceSetting {
 
     private final JComboBox<String> module = new JComboBox<>();
+    private final JCheckBox autoMode = new JCheckBox(tr("Automatically detect the module"));
 
     /**
      * Constructs a new {@code PointInfoPreference}.
@@ -38,6 +40,12 @@ public class PointInfoPreference extends DefaultTabPreferenceSetting {
     @Override
     public void addGui(PreferenceTabbedPane gui) {
         JPanel panel = new JPanel(new GridBagLayout());
+        // autoMode
+        autoMode.setSelected(Main.pref.getBoolean("plugin.pointinfo.automode", true));
+        autoMode.setToolTipText(tr("Try to guess the appropriate module from the location."
+                + " If it fails, use the module selected below."));
+        panel.add(autoMode, GBC.eol().insets(0, 0, 0, 0));
+        // module
         for (String modName : PointInfoPlugin.getModules()) {
             module.addItem(modName);
         }
@@ -51,6 +59,7 @@ public class PointInfoPreference extends DefaultTabPreferenceSetting {
 
     @Override
     public boolean ok() {
+        Main.pref.putBoolean("plugin.pointinfo.automode", autoMode.isSelected());
         Main.pref.put("plugin.pointinfo.module", (String) module.getSelectedItem());
         return false;
     }

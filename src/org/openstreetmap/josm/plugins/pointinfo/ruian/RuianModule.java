@@ -16,6 +16,7 @@ import org.openstreetmap.josm.plugins.pointinfo.AbstractPointInfoModule;
 public class RuianModule extends AbstractPointInfoModule {
 
     private static final String moduleName = "RUIAN";
+    private static final String areaName = "cz";
     private static final String URL = "http://josm.poloha.net/pointInfo/v4/index.php";
 
     private RuianRecord m_record = new RuianRecord();
@@ -51,5 +52,10 @@ public class RuianModule extends AbstractPointInfoModule {
     @Override
     public String getName() {
         return moduleName;   
+    }
+
+    @Override
+    public String getArea() {
+        return areaName;
     }
 }

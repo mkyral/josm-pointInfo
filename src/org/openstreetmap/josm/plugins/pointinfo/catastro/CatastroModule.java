@@ -17,6 +17,7 @@ import org.openstreetmap.josm.plugins.pointinfo.AbstractPointInfoModule;
 public class CatastroModule extends AbstractPointInfoModule {
 
     private static final String moduleName = "Catastro";
+    private static final String areaName = "es";
     private static final String catURL = "http://ovc.catastro.meh.es/ovcservweb/OVCSWLocalizacionRC/OVCCoordenadas.asmx/Consulta_RCCOOR?SRS=EPSG:4326&Coordenada_X=%f&Coordenada_Y=%f";
 
     private CatastroRecord m_record = new CatastroRecord();
@@ -53,5 +54,10 @@ public class CatastroModule extends AbstractPointInfoModule {
     @Override
     public String getName() {
         return moduleName;   
+    }
+
+    @Override
+    public String getArea() {
+        return areaName;
     }
 }
