@@ -19,7 +19,7 @@ class ReverseRecord {
     private String village;
     private String cityDistrict;
     private String suburb;
-    
+
     /**
      * Default constructor
      *
@@ -30,6 +30,7 @@ class ReverseRecord {
 
     /**
      * Constructor from JSON
+     * @param obj the Json object
      *
      */
     ReverseRecord(JsonObject obj) {
@@ -65,11 +66,11 @@ class ReverseRecord {
         cityDistrict = null;
         suburb = null;
     }
-    
+
     /**
      * Returns true if area is equals to any address value
-     * @param area
-     * @return match
+     * @param area area to be checked
+     * @return match area matched
      */
     public Boolean matchAnyArea(String area) {
         if (area.equals(countryCode)) return true;
