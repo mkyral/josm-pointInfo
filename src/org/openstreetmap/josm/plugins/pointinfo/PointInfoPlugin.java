@@ -53,7 +53,7 @@ public class PointInfoPlugin extends Plugin {
 
     /**
      * Returns a list of available modules names
-     * @return modsList 
+     * @return modsList
      */
     public static List<String> getModules() {
         return new ArrayList<>(modules.keySet());
@@ -61,8 +61,9 @@ public class PointInfoPlugin extends Plugin {
 
     /**
      * Returns a valid module for this point. If auto mode is selected, returns
-     * the first valid module for the area in the given position 
+     * the first valid module for the area in the given position
      the currently selected module
+     * @param pos position LatLon
      * @return module
      * @throws IOException if any IO error occurs.
     */

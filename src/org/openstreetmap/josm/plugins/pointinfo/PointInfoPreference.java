@@ -41,7 +41,7 @@ public class PointInfoPreference extends DefaultTabPreferenceSetting {
     public void addGui(PreferenceTabbedPane gui) {
         JPanel panel = new JPanel(new GridBagLayout());
         // autoMode
-        autoMode.setSelected(Main.pref.getBoolean("plugin.pointinfo.automode", true));
+        autoMode.setSelected(Main.pref.getBoolean("plugin.pointinfo.automode", false));
         autoMode.setToolTipText(tr("Try to guess the appropriate module from the location."
                 + " If it fails, use the module selected below."));
         panel.add(autoMode, GBC.eol().insets(0, 0, 0, 0));
