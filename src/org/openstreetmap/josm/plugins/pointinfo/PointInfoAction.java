@@ -62,7 +62,7 @@ class PointInfoAction extends MapMode implements MouseListener {
     }
 
     private static Cursor getCursor() {
-        return ImageProvider.getCursor("crosshair", "info-sml");
+        return ImageProvider.getCursor("crosshair", "pointinfo.svg");
     }
 
     protected void infoAsync(Point clickPoint) {
@@ -109,7 +109,7 @@ class PointInfoAction extends MapMode implements MouseListener {
                         });
                         JScrollPane scrollPane = new JScrollPane(msgLabel);
                         Object[] objects = {scrollPane};
-                        final ImageIcon icon = new ImageIcon(getClass().getResource("/images/dialogs/info-sml.png"));
+                        final ImageIcon icon = ImageProvider.get("dialogs/pointinfo.svg");
                         JOptionPane.showMessageDialog(
                                 null, objects, tr("PointInfo") + " " + coordinatesText, JOptionPane.PLAIN_MESSAGE, icon);
                     }
