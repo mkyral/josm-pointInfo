@@ -20,9 +20,9 @@
 <span class="sourceLineNo">012</span>import javax.swing.JLabel;<a name="line.12"></a>
 <span class="sourceLineNo">013</span>import javax.swing.JPanel;<a name="line.13"></a>
 <span class="sourceLineNo">014</span><a name="line.14"></a>
-<span class="sourceLineNo">015</span>import org.openstreetmap.josm.Main;<a name="line.15"></a>
-<span class="sourceLineNo">016</span>import org.openstreetmap.josm.gui.preferences.DefaultTabPreferenceSetting;<a name="line.16"></a>
-<span class="sourceLineNo">017</span>import org.openstreetmap.josm.gui.preferences.PreferenceTabbedPane;<a name="line.17"></a>
+<span class="sourceLineNo">015</span>import org.openstreetmap.josm.gui.preferences.DefaultTabPreferenceSetting;<a name="line.15"></a>
+<span class="sourceLineNo">016</span>import org.openstreetmap.josm.gui.preferences.PreferenceTabbedPane;<a name="line.16"></a>
+<span class="sourceLineNo">017</span>import org.openstreetmap.josm.spi.preferences.Config;<a name="line.17"></a>
 <span class="sourceLineNo">018</span>import org.openstreetmap.josm.tools.GBC;<a name="line.18"></a>
 <span class="sourceLineNo">019</span><a name="line.19"></a>
 <span class="sourceLineNo">020</span>/**<a name="line.20"></a>
@@ -41,37 +41,32 @@
 <span class="sourceLineNo">033</span>    }<a name="line.33"></a>
 <span class="sourceLineNo">034</span><a name="line.34"></a>
 <span class="sourceLineNo">035</span>    @Override<a name="line.35"></a>
-<span class="sourceLineNo">036</span>    public String getIconName() {<a name="line.36"></a>
-<span class="sourceLineNo">037</span>        return "info-sml.png";<a name="line.37"></a>
-<span class="sourceLineNo">038</span>    }<a name="line.38"></a>
-<span class="sourceLineNo">039</span><a name="line.39"></a>
-<span class="sourceLineNo">040</span>    @Override<a name="line.40"></a>
-<span class="sourceLineNo">041</span>    public void addGui(PreferenceTabbedPane gui) {<a name="line.41"></a>
-<span class="sourceLineNo">042</span>        JPanel panel = new JPanel(new GridBagLayout());<a name="line.42"></a>
-<span class="sourceLineNo">043</span>        // autoMode<a name="line.43"></a>
-<span class="sourceLineNo">044</span>        autoMode.setSelected(Main.pref.getBoolean("plugin.pointinfo.automode", false));<a name="line.44"></a>
-<span class="sourceLineNo">045</span>        autoMode.setToolTipText(tr("Try to guess the appropriate module from the location."<a name="line.45"></a>
-<span class="sourceLineNo">046</span>                + " If it fails, use the module selected below."));<a name="line.46"></a>
-<span class="sourceLineNo">047</span>        panel.add(autoMode, GBC.eol().insets(0, 0, 0, 0));<a name="line.47"></a>
-<span class="sourceLineNo">048</span>        // module<a name="line.48"></a>
-<span class="sourceLineNo">049</span>        for (String modName : PointInfoPlugin.getModules()) {<a name="line.49"></a>
-<span class="sourceLineNo">050</span>            module.addItem(modName);<a name="line.50"></a>
-<span class="sourceLineNo">051</span>        }<a name="line.51"></a>
-<span class="sourceLineNo">052</span>        module.setSelectedItem(Main.pref.get("plugin.pointinfo.module", "RUIAN"));<a name="line.52"></a>
-<span class="sourceLineNo">053</span>        module.setToolTipText(tr("The module called to get the point information."));<a name="line.53"></a>
-<span class="sourceLineNo">054</span>        panel.add(new JLabel(tr("Module")), GBC.std());<a name="line.54"></a>
-<span class="sourceLineNo">055</span>        panel.add(module, GBC.eol().fill(GridBagConstraints.HORIZONTAL).insets(5, 0, 0, 5));<a name="line.55"></a>
-<span class="sourceLineNo">056</span>        panel.add(Box.createVerticalGlue(), GBC.eol().fill(GridBagConstraints.VERTICAL));<a name="line.56"></a>
-<span class="sourceLineNo">057</span>        createPreferenceTabWithScrollPane(gui, panel);<a name="line.57"></a>
-<span class="sourceLineNo">058</span>    }<a name="line.58"></a>
-<span class="sourceLineNo">059</span><a name="line.59"></a>
-<span class="sourceLineNo">060</span>    @Override<a name="line.60"></a>
-<span class="sourceLineNo">061</span>    public boolean ok() {<a name="line.61"></a>
-<span class="sourceLineNo">062</span>        Main.pref.putBoolean("plugin.pointinfo.automode", autoMode.isSelected());<a name="line.62"></a>
-<span class="sourceLineNo">063</span>        Main.pref.put("plugin.pointinfo.module", (String) module.getSelectedItem());<a name="line.63"></a>
-<span class="sourceLineNo">064</span>        return false;<a name="line.64"></a>
-<span class="sourceLineNo">065</span>    }<a name="line.65"></a>
-<span class="sourceLineNo">066</span>}<a name="line.66"></a>
+<span class="sourceLineNo">036</span>    public void addGui(PreferenceTabbedPane gui) {<a name="line.36"></a>
+<span class="sourceLineNo">037</span>        JPanel panel = new JPanel(new GridBagLayout());<a name="line.37"></a>
+<span class="sourceLineNo">038</span>        // autoMode<a name="line.38"></a>
+<span class="sourceLineNo">039</span>        autoMode.setSelected(Config.getPref().getBoolean("plugin.pointinfo.automode", false));<a name="line.39"></a>
+<span class="sourceLineNo">040</span>        autoMode.setToolTipText(tr("Try to guess the appropriate module from the location."<a name="line.40"></a>
+<span class="sourceLineNo">041</span>                + " If it fails, use the module selected below."));<a name="line.41"></a>
+<span class="sourceLineNo">042</span>        panel.add(autoMode, GBC.eol().insets(0, 0, 0, 0));<a name="line.42"></a>
+<span class="sourceLineNo">043</span>        // module<a name="line.43"></a>
+<span class="sourceLineNo">044</span>        for (String modName : PointInfoPlugin.getModules()) {<a name="line.44"></a>
+<span class="sourceLineNo">045</span>            module.addItem(modName);<a name="line.45"></a>
+<span class="sourceLineNo">046</span>        }<a name="line.46"></a>
+<span class="sourceLineNo">047</span>        module.setSelectedItem(Config.getPref().get("plugin.pointinfo.module", "RUIAN"));<a name="line.47"></a>
+<span class="sourceLineNo">048</span>        module.setToolTipText(tr("The module called to get the point information."));<a name="line.48"></a>
+<span class="sourceLineNo">049</span>        panel.add(new JLabel(tr("Module")), GBC.std());<a name="line.49"></a>
+<span class="sourceLineNo">050</span>        panel.add(module, GBC.eol().fill(GridBagConstraints.HORIZONTAL).insets(5, 0, 0, 5));<a name="line.50"></a>
+<span class="sourceLineNo">051</span>        panel.add(Box.createVerticalGlue(), GBC.eol().fill(GridBagConstraints.VERTICAL));<a name="line.51"></a>
+<span class="sourceLineNo">052</span>        createPreferenceTabWithScrollPane(gui, panel);<a name="line.52"></a>
+<span class="sourceLineNo">053</span>    }<a name="line.53"></a>
+<span class="sourceLineNo">054</span><a name="line.54"></a>
+<span class="sourceLineNo">055</span>    @Override<a name="line.55"></a>
+<span class="sourceLineNo">056</span>    public boolean ok() {<a name="line.56"></a>
+<span class="sourceLineNo">057</span>        Config.getPref().putBoolean("plugin.pointinfo.automode", autoMode.isSelected());<a name="line.57"></a>
+<span class="sourceLineNo">058</span>        Config.getPref().put("plugin.pointinfo.module", (String) module.getSelectedItem());<a name="line.58"></a>
+<span class="sourceLineNo">059</span>        return false;<a name="line.59"></a>
+<span class="sourceLineNo">060</span>    }<a name="line.60"></a>
+<span class="sourceLineNo">061</span>}<a name="line.61"></a>
 
 
 
