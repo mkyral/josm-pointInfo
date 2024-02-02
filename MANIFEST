@@ -1,0 +1,15 @@
+Manifest-Version: 1.0
+Ant-Version: Apache Ant 1.10.9
+Created-By: 21.0.1+12-LTS (Eclipse Adoptium)
+Plugin-Mainversion: 18723
+Plugin-Version: 36203
+Plugin-Class: org.openstreetmap.josm.plugins.pointinfo.PointInfoPlugin
+Plugin-Description: Shows an additional information about point on map
+ . Only Czech RUIAN and Spanish Cadastre Web Services modules are avai
+ lable at this moment.
+Plugin-Date: 2024-01-14T19:52:54.429418Z
+Author: Marián Kyral
+Plugin-Link: https://github.com/mkyral/josm-pointInfo
+Plugin-Icon: images/mapmode/pointinfo.svg
+Plugin-Canloadatruntime: true
+
